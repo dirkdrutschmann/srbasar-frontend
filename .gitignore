@@ -80,3 +80,4 @@ temp/
 # Vite
 .vite/ 
 package-lock.json
+yarn.lock

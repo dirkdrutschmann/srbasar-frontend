@@ -3,8 +3,7 @@ import { createPinia } from "pinia";
 import App from "./App.vue";
 import router from "./router";
 import VueGoodTablePlugin from "vue-good-table-next";
-import JsonExcel from "vue-json-excel3";
-import { logConfig } from "@/config/env";
+import JsonExcel from "vue-json-excel3";;
 import debounce from "./directives/debounce.js";
 
 // Styles

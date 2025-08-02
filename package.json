@@ -22,6 +22,7 @@
     "jquery": "^3.7.1",
     "libphonenumber-js": "^1.12.10",
     "maz-ui": "^3.50.1",
+    "pinia": "^3.0.3",
     "tabulator-tables": "^6.3.1",
     "uuid": "^11.1.0",
     "vue": "^3.5.18",

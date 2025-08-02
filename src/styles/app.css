@@ -1,0 +1,349 @@
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+}
+
+p{
+  color: white;
+}
+
+h1,h2,h3,h4,h5,h6{
+  color: whitesmoke;
+}
+
+body, strong{
+  color: white;
+  background-color: #324057;
+}
+.bg-darker {
+  color: #2c3e50;
+}
+.nocturnal {
+  border: 1px solid #435169 !important;
+  background-color: #324057 !important;
+}
+.otherClub {
+  border: 1px solid #435169 !important;
+  background-color: #324057 !important;
+}
+input[type="checkbox"]{
+  accent-color: #324057 !important;
+}
+input[type="checkbox"][disabled]{
+  display:none;
+}
+.besetzt {
+  background: darkgreen;
+}
+
+.offen {
+  background: maroon;
+}
+
+.basar {
+  background: chocolate;
+}
+
+.besetztoffen td:first-of-type,
+.besetztoffen td:nth-of-type(2) {
+  background: darkgreen;
+}
+
+.besetztoffen td:nth-of-type(3),
+.besetztoffen td:nth-of-type(4) {
+  background: maroon;
+}
+
+.offenbesetzt td:first-of-type,
+.offenbesetzt td:nth-of-type(2) {
+  background: maroon;
+}
+
+.offenbesetzt td:nth-of-type(3),
+.offenbesetzt td:nth-of-type(4) {
+  background: darkgreen;
+}
+
+.offenbesetzt tr {
+  background-color: #324057;
+  background-attachment: fixed;
+  background-image: -webkit-linear-gradient(30deg, maroon 50%, darkgreen 50%);
+}
+
+
+.besetztbasar td:first-of-type,
+.besetztbasar td:nth-of-type(2) {
+  background: darkgreen;
+
+
+}
+
+.besetztbasar td:nth-of-type(3),
+.besetztbasar td:nth-of-type(4) {
+  background: chocolate;
+}
+
+.basarbesetzt td:first-of-type,
+.basarbesetzt td:nth-of-type(2) {
+  background: chocolate;
+
+}
+
+.basarbesetzt td:nth-of-type(3),
+.basarbesetzt td:nth-of-type(4) {
+  background: darkgreen;
+}
+
+.offenbasar td:first-of-type,
+.offenbasar td:nth-of-type(2) {
+
+  background: maroon;
+}
+
+.offenbasar td:nth-of-type(3),
+.offenbasar td:nth-of-type(4) {
+  background: chocolate;
+}
+
+
+.basaroffen td:first-of-type,
+.basaroffen td:nth-of-type(2) {
+  background: chocolate;
+}
+
+.basaroffen td:nth-of-type(3),
+.basaroffen td:nth-of-type(4) {
+  background: maroon;
+}
+
+
+.halfbasar td:first-of-type,
+.halfbasar td:nth-of-type(2) {
+  background: #324057;
+}
+
+.halfbasar td:nth-of-type(3),
+.halfbasar td:nth-of-type(4) {
+  background: chocolate;
+}
+
+.basarhalf td:first-of-type,
+.basarhalf td:nth-of-type(2) {
+  background: chocolate;
+}
+
+.basarhalf td:nth-of-type(3),
+.basarhalf td:nth-of-type(4) {
+  background: #324057;
+}
+
+
+.spielausfall {
+  background: maroon;
+}
+
+
+.vereine,
+.vgt-wrap.nocturnal,
+.nocturnal{
+ background: transparent !important;
+ border: none !important;
+}
+
+.vgt-table tbody tr{
+  background: linear-gradient(135deg, #2c394f9f, #2c394fa1) !important;
+}
+
+
+.vgt-table thead tr th{
+  background: transparent !important;
+}
+ .vgt-table thead, .vgt-wrap__footer{
+  margin: 20px 0;
+  background:  var(--bs-dark) !important;
+  border-radius: 10px;
+}
+
+.vgt-inner-wrap{
+  background: transparent !important;
+  border: none !important;
+}
+.vgt-responsive,.vgt-table{
+  border-radius: 10px;
+  border: 1px solid #435169 !important;
+}
+
+
+.vgt-global-search.vgt-clearfix {
+  margin: 20px 0;
+  border-radius: 10px;
+}
+
+/* MazPhoneNumberInput Styling */
+.maz-phone-number-input {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 6px !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(10px) !important;
+  width: 100% !important;
+}
+
+.maz-phone-number-input .maz-phone-number-input__country-selector {
+  background: transparent !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+
+.maz-phone-number-input .maz-phone-number-input__country-selector select {
+  background: transparent !important;
+  border: none !important;
+  color: #ffffff !important;
+  outline: none !important;
+}
+
+.maz-phone-number-input .maz-phone-number-input__phone-input {
+  background: transparent !important;
+  border: none !important;
+  color: #ffffff !important;
+  outline: none !important;
+  width: 100% !important;
+}
+.m-input-input,.m-input-wrapper{
+  width: 100% !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border:none !important;
+  color: white !important;
+}
+.m-phone-number-input{ 
+  border: 1px solid rgba(255, 255, 255, 0.3)!important;
+  border-radius: 10px !important
+}
+.m-input-wrapper input{
+  background: transparent !important;
+}
+.maz-phone-number-input .maz-phone-number-input__phone-input::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.maz-phone-number-input:focus-within {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1) !important;
+}
+
+.maz-phone-number-input .maz-phone-number-input__dropdown {
+  background: rgba(0, 0, 0, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 6px !important;
+  color: #ffffff !important;
+}
+
+.maz-phone-number-input .maz-phone-number-input__dropdown option {
+  background: rgba(0, 0, 0, 0.9) !important;
+  color: #ffffff !important;
+}
+
+.maz-phone-number-input .maz-phone-number-input__dropdown option:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Maz Select List Dark Mode Styling */
+.m-select-list {
+  background: rgba(0, 0, 0, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.m-select-list .m-select-list__item {
+  color: #ffffff !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 8px 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+.m-select-list .m-select-list__item:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.m-select-list .m-select-list__item--selected {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.m-select-list .m-select-list__item--keyboard-selected {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.m-select-list .m-select-list__item--disabled {
+  color: rgba(255, 255, 255, 0.4) !important;
+  background: transparent !important;
+}
+
+.m-select-list .m-select-list__item--disabled:hover {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Maz Select List Search Input Dark Mode Styling */
+.m-select-list .m-select-list__search-input::placeholder {
+  color: #ffffff !important;
+}
+
+.m-select-list .m-select-list__search-wrapper input {
+  color: #ffffff !important;
+}
+
+.m-select-list .m-select-list__search-wrapper svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+.m-select-list .m-select-list__search-wrapper .m-select-list__search-icon {
+  color: #ffffff !important;
+}
+
+/* Dropdown Menu Dark Mode Styling */
+.dropdown-menu {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.dropdown-menu .dropdown-item {
+  color: #212529 !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  transition: all 0.2s ease !important;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: #212529 !important;
+}
+
+.dropdown-menu .dropdown-item:active {
+  background: rgba(0, 0, 0, 0.1) !important;
+  color: #212529 !important;
+}
+
+.dropdown-menu .dropdown-item:focus {
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: #212529 !important;
+  opacity: 0.5 !important;
+}
+
+.text-muted{
+  color: #babfc4 !important;
+}

@@ -30,6 +30,7 @@
               <tr>
                 <th>ID</th>
                 <th>Benutzername</th>
+                <th>Name</th>
                 <th>E-Mail</th>
                 <th>Rolle</th>
                 <th>Erstellt am</th>
@@ -42,6 +43,7 @@
                 <td>
                   <strong>{{ user.username }}</strong>
                 </td>
+                <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
                 <td>
                   <span 
@@ -116,6 +118,18 @@
                 />
               </div>
               <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="name"
+                  v-model="newUser.name"
+                  required
+                  minlength="2"
+                  maxlength="100"
+                />
+              </div>
+              <div class="mb-3">
                 <label for="email" class="form-label">E-Mail</label>
                 <input 
                   type="email" 
@@ -179,7 +193,7 @@
             ></button>
           </div>
           <div class="modal-body">
-            <p>Rolle für Benutzer <strong>{{ editingUser?.username }}</strong> ändern:</p>
+            <p>Rolle für Benutzer <strong>{{ editingUser?.name }} ({{ editingUser?.username }})</strong> ändern:</p>
             <div class="mb-3">
               <label for="editRole" class="form-label">Neue Rolle</label>
               <select 
@@ -236,7 +250,7 @@
               <font-awesome-icon icon="fa-solid fa-exclamation-triangle" class="me-2" />
               <strong>Achtung!</strong> Diese Aktion kann nicht rückgängig gemacht werden.
             </div>
-            <p>Möchten Sie den Benutzer <strong>{{ userToDelete?.username }}</strong> wirklich löschen?</p>
+            <p>Möchten Sie den Benutzer <strong>{{ userToDelete?.name }} ({{ userToDelete?.username }})</strong> wirklich löschen?</p>
           </div>
           <div class="modal-footer">
             <button 
@@ -305,6 +319,7 @@ const showDeleteModal = ref(false)
 // Form data
 const newUser = ref({
   username: '',
+  name: '',
   email: '',
   role: 'user'
 })
@@ -397,6 +412,7 @@ const closeCreateModal = () => {
   showCreateModal.value = false
   newUser.value = {
     username: '',
+    name: '',
     email: '',
     role: 'user'
   }

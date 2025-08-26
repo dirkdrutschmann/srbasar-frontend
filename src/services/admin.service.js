@@ -17,7 +17,7 @@ class AdminService {
 
   /**
    * Neuen Benutzer erstellen
-   * @param {Object} userData - { username, email, role }
+   * @param {Object} userData - { username, email, name, role }
    */
   async createUser(userData) {
     try {

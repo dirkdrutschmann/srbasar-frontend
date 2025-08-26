@@ -5,6 +5,7 @@ import ProfileView from '../views/ProfileView.vue'
 import ResetView from '../views/ResetView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
 import VereineView from '../views/VereineView.vue'
+import AdminUsersView from '../views/AdminUsersView.vue'
 
 const routes = [
   {
@@ -43,6 +44,12 @@ const routes = [
     name: 'vereine',
     component: VereineView,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin/users',
+    name: 'admin-users',
+    component: AdminUsersView,
+    meta: { requiresAuth: true, requiresAdmin: true }
   }
 ]
 
@@ -57,6 +64,12 @@ router.beforeEach((to, from, next) => {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
     if (!user.accessToken) {
       next('/login')
+      return
+    }
+    
+    // Admin-Berechtigung überprüfen
+    if (to.meta.requiresAdmin && user.role !== 'admin') {
+      next('/') // Redirect zur Startseite wenn keine Admin-Berechtigung
       return
     }
   }

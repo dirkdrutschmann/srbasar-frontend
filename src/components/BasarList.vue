@@ -4,10 +4,19 @@
     <div class="filters-section mb-3">
       <div class="filters-header" @click="toggleFilters">
         <h5 class="mb-0">
-          <i class="fas fa-filter me-2"></i>
+          <font-awesome-icon icon="fa-solid fa-filter" class="me-2" />
           Filter anzeigen
-          <i :class="filtersCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'" class="ms-2"></i>
+          <font-awesome-icon 
+            :icon="filtersCollapsed ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-up'" 
+            class="ms-2 chevron-icon" 
+          />
         </h5>
+        <!-- Badge für aktive Filter -->
+        <div v-if="hasActiveFilters" class="active-filters-badge" @click.stop="clearFilters">
+          <span class="badge-count">{{ activeFiltersCount }}</span>
+          <span class="badge-text">Filter aktiv</span>
+          <font-awesome-icon icon="fa-solid fa-times" class="ms-1" />
+        </div>
       </div>
       
       <div v-show="!filtersCollapsed" class="filters-content">
@@ -22,6 +31,10 @@
               placeholder="Alle Spielfelder"
               noOptionsText="Keine Optionen verfügbar"
               noResultsText="Keine Ergebnisse gefunden"
+              searchPlaceholder="Suchen..."
+              selectLabel="Enter zum Auswählen"
+              deselectLabel="Enter zum Entfernen"
+              selectedLabel="Ausgewählt"
               @change="applyFilters"
               class="custom-multiselect"
             />
@@ -36,6 +49,10 @@
               placeholder="Alle Ligen"
               noOptionsText="Keine Optionen verfügbar"
               noResultsText="Keine Ergebnisse gefunden"
+              searchPlaceholder="Suchen..."
+              selectLabel="Enter zum Auswählen"
+              deselectLabel="Enter zum Entfernen"
+              selectedLabel="Ausgewählt"
               @change="applyFilters"
               class="custom-multiselect"
             />
@@ -57,9 +74,11 @@
           </div>
         </div>
         <div class="row mt-3">
-          <div class="col-12 d-flex justify-content-center gap-2">
+          <div class="col-12 d-flex justify-content-center gap-2 flex-wrap">
             <Datepicker
               v-model="localFilters.spieldatum"
+              ref="datepicker"
+              no-today
               :enable-time-picker="false"
               :locale="'de'"
               :auto-apply="true"
@@ -69,24 +88,23 @@
               teleport-center 
               class="custom-datepicker"
             >
-              <template #trigger>
-                <button 
+            </Datepicker>
+            <button 
                   type="button" 
                   class="btn btn-outline-secondary btn-sm datepicker-trigger"
                   :class="{ 'active': localFilters.spieldatum }"
+                  @click="toggleDatepicker"
                 >
                   <font-awesome-icon icon="fa-solid fa-calendar" class="me-1" />
                   {{ localFilters.spieldatum ? formatDateForDisplay(localFilters.spieldatum.getTime().toString()) : 'Datum auswählen' }}
                 </button>
-              </template>
-            </Datepicker>
-            
             <button 
               @click="clearFilters" 
               class="btn btn-outline-secondary btn-sm"
               :disabled="loading"
             >
-              <i class="fas fa-undo me-1"></i>Filter zurücksetzen
+              <font-awesome-icon icon="fa-solid fa-undo" class="me-1" />
+              Filter zurücksetzen
             </button>
           </div>
         </div>
@@ -103,9 +121,15 @@
         :isLoading.sync="loading"
         :pagination-options="{
           enabled: true,
-          perPage: pagination.pageSize,
+          perPage: pagination.pageSize || 10,
           perPageDropdown: [10, 20, 50, 100],
-          perPageDropdownEnabled: true
+          perPageDropdownEnabled: true,
+          nextLabel: 'Nächste',
+          prevLabel: 'Vorherige',
+          rowsPerPageLabel: 'Spiele pro Seite',
+          ofLabel: 'von',
+          pageLabel: 'Seite',
+          allLabel: 'Alle'
         }"
         theme="nocturnal"
         :search-options="{
@@ -113,7 +137,8 @@
         }"
         :sort-options="{
           enabled: true,
-          initialSortBy: { field: 'datum', type: 'asc' }
+          initialSortBy: { field: 'datum', type: 'asc' },
+          multiColumn: false
         }"
         @page-change="onPageChange"
         @per-page-change="onPerPageChange"
@@ -143,6 +168,10 @@ import { ref, computed, watch } from 'vue'
 import Multiselect from 'vue-multiselect'
 import Datepicker from '@vuepic/vue-datepicker'
 
+const datepicker = ref(null)
+const toggleDatepicker = () => {
+  datepicker.value.toggleMenu()
+}
 const props = defineProps({
   games: {
     type: Array,
@@ -189,6 +218,24 @@ const availableDates = computed(() => {
   })
 })
 
+// Überprüfe ob aktive Filter vorhanden sind
+const hasActiveFilters = computed(() => {
+  return localFilters.value.spieldatum || 
+         localFilters.value.ligaName || 
+         localFilters.value.spielfeldName || 
+         localFilters.value.search
+})
+
+// Zähle aktive Filter
+const activeFiltersCount = computed(() => {
+  let count = 0
+  if (localFilters.value.spieldatum) count++
+  if (localFilters.value.ligaName) count++
+  if (localFilters.value.spielfeldName) count++
+  if (localFilters.value.search) count++
+  return count
+})
+
 // Filter ein-/ausklappen
 const toggleFilters = () => {
   filtersCollapsed.value = !filtersCollapsed.value
@@ -232,27 +279,14 @@ const onPerPageChange = (params) => {
 }
 
 const onSortChange = (params) => {
-  const { sortBy, sortType, columnIndex } = params
-  const sortOrder = sortType === 'asc' ? 'ASC' : 'DESC'
-  
-  // Verwende sortField aus der Spalten-Definition oder fallback auf das ursprüngliche Feld
-  let backendSortField = sortBy
-  
-  // Versuche columnIndex zu verwenden, falls verfügbar
-  if (columnIndex !== undefined && columns[columnIndex]) {
-    const column = columns[columnIndex]
-    backendSortField = column.sortField || sortBy
-  } else {
-    // Fallback: Mappe bekannte Felder manuell
-    if (sortBy === 'datum' || sortBy === 'zeit') {
-      backendSortField = 'spieldatum'
-    }
+  console.log('Sortierung empfangen:', params)
+  if(Array.isArray(params)) {
+    params = params[0]
   }
-  
-  // Sende Sortierung direkt an das Backend
+  const { field, type } = params
   emit('sort-change', { 
-    sortBy: backendSortField, 
-    sortOrder: sortOrder 
+    sortBy: field, 
+    sortOrder: type 
   })
 }
 
@@ -267,15 +301,14 @@ const columns = [
     tdClass: 'text-center',
     thClass: 'text-center',
     sortable: true,
-    sortField: 'spieldatum', // Backend-Feld für Sortierung
+    sortField: 'spieldatum',
   },
   {
     label: 'Zeit',
     field: 'zeit',
     tdClass: 'text-center',
     thClass: 'text-center',
-    sortable: true,
-    sortField: 'spieldatum', // Backend-Feld für Sortierung
+    sortable: false,
   },
   {
     label: 'Spielfeld',
@@ -283,6 +316,7 @@ const columns = [
     thClass: 'text-center',
     tdClass: 'text-center',
     sortable: true,
+    sortField: 'spielfeldName',
   },
   {
     label: 'Heimteam',
@@ -291,6 +325,7 @@ const columns = [
     tdClass: 'text-center',
     thClass: 'text-center',
     sortable: true,
+    sortField: 'heimMannschaftName',
   },
   {
     label: 'Gastteam',
@@ -299,6 +334,7 @@ const columns = [
     tdClass: 'text-center',
     thClass: 'text-center',
     sortable: true,
+    sortField: 'gastMannschaftName',
   },
   {
     label: 'SR Verein 1',
@@ -306,6 +342,7 @@ const columns = [
     tdClass: 'text-center',
     thClass: 'text-center',
     sortable: true,
+    sortField: 'sr1VereinName',
   },
   {
     label: 'SR Verein 2',
@@ -313,13 +350,14 @@ const columns = [
     tdClass: 'text-center',
     thClass: 'text-center',
     sortable: true,
+    sortField: 'sr2VereinName',
   },
   {
     label: 'SR Qualifikation',
     field: 'srQualifikation.bezeichnung',
     tdClass: 'text-center',
     thClass: 'text-center',
-    sortable: false, // Komplexe Felder können nicht sortiert werden
+    sortable: false,
   },
   {
     label: 'Aktion',
@@ -543,7 +581,12 @@ watch(() => localFilters.value.ligaName, (newVal) => {
 :deep(.dp__arrow_top) {
   border-bottom: 5px solid #6c757d;
 }
-
+:deep(.custom-datepicker input),
+:deep(.custom-datepicker .dp__input_icons),
+:deep(.custom-datepicker .dp__input_icon),
+:deep(.custom-datepicker .dp__input_wrap) {
+  display:none !important;
+}
 /* Datepicker Button Styling */
 .datepicker-trigger {
   min-height: 38px;
@@ -581,10 +624,52 @@ watch(() => localFilters.value.ligaName, (newVal) => {
   cursor: pointer;
   transition: all 0.3s ease;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .filters-header:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* Aktive Filter Badge */
+.active-filters-badge {
+  display: flex;
+  align-items: center;
+  background: rgba(220, 53, 69, 0.9);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.active-filters-badge:hover {
+  background: rgba(220, 53, 69, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.badge-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.badge-text {
+  margin-right: 0.25rem;
 }
 
 .filters-header h5 {
@@ -594,6 +679,15 @@ watch(() => localFilters.value.ligaName, (newVal) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.chevron-icon {
+  transition: transform 0.3s ease;
+  font-size: 0.875rem;
+}
+
+.filters-header:hover .chevron-icon {
+  transform: scale(1.1);
 }
 
 .filters-content {

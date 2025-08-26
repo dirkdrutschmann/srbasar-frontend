@@ -43,12 +43,12 @@
                             class="form-check-input custom-checkbox"
                             type="checkbox"
                             :id="'hideLink-' + verein.vereinId"
-                            v-model="verein.hideLink"
+                            :checked="!verein.hideLink"
                             @change="updateHideLink(verein)"
                             :disabled="updating === verein.vereinId"
                           />
                           <label class="form-check-label ms-2" :for="'hideLink-' + verein.vereinId">
-                            {{ verein.hideLink ? 'Versteckt' : 'Sichtbar' }}
+                            {{ !verein.hideLink ? 'Sichtbar' : 'Versteckt' }}
                           </label>
                         </div>
                       </td>
@@ -117,7 +117,12 @@ const updateHideLink = async (verein) => {
   updating.value = verein.vereinId
   
   try {
-    await VereinService.updateHideLink(verein.vereinId, verein.hideLink)
+    // Toggle den hideLink Status
+    const newHideLinkValue = !verein.hideLink
+    await VereinService.updateHideLink(verein.vereinId, newHideLinkValue)
+    
+    // Aktualisiere den lokalen Status
+    verein.hideLink = newHideLinkValue
     
     // Zeige Erfolgsstatus
     updateStatus.value[verein.vereinId] = true
@@ -127,9 +132,6 @@ const updateHideLink = async (verein) => {
     
   } catch (error) {
     console.error('Fehler beim Aktualisieren des Vereins:', error)
-    
-    // Setze Checkbox zurück bei Fehler
-    verein.hideLink = !verein.hideLink
     
     alert('Fehler beim Speichern der Änderung')
   } finally {

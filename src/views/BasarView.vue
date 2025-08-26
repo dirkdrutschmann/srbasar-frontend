@@ -24,7 +24,7 @@ const games = ref([])
 const loading = ref(false)
 const pagination = ref({
   currentPage: 1,
-  pageSize: 20,
+  pageSize: 10,
   totalItems: 0,
   totalPages: 0,
   hasNextPage: false,
@@ -36,14 +36,19 @@ const availableFilters = ref({
   spieldatum: []
 })
 
-// Aktuelle Filter und Sortierung
-const currentFilters = ref({
-  spieldatum: '',
-  ligaName: '',
-  spielfeldName: '',
-  search: '',
-  sortBy: 'spieldatum',
-  sortOrder: 'ASC'
+const serverParams = ref({
+  columnFilters: {
+    spieldatum: '',
+    ligaName: '',
+    spielfeldName: '',
+    search: ''
+  },
+  sort: {
+    field: 'spieldatum',
+    type: 'ASC'
+  },
+  page: 1,
+  perPage: 10
 })
 
 function renderToHtml(icon, options = {}) {
@@ -60,7 +65,7 @@ function renderToHtml(icon, options = {}) {
   return html
 }
 
-// Verarbeite die Spiele-Daten für die Anzeige
+
 const processedGames = computed(() => {
   return games.value.map(game => ({
     ...game,
@@ -70,14 +75,20 @@ const processedGames = computed(() => {
   }))
 })
 
-// Lade Spiele mit aktuellen Filtern
+const updateParams = (newProps) => {
+  serverParams.value = Object.assign({}, serverParams.value, newProps)
+  console.log('Server-Parameter aktualisiert:', serverParams.value)
+}
+
 const loadGames = async () => {
   loading.value = true
   try {
     const params = {
-      page: pagination.value.currentPage,
-      limit: pagination.value.pageSize,
-      ...currentFilters.value
+      page: serverParams.value.page,
+      limit: serverParams.value.perPage,
+      sortBy: serverParams.value.sort.field,
+      sortOrder: serverParams.value.sort.type,
+      ...serverParams.value.columnFilters
     }
     
     const res = await GamesService.getSpiele(params)
@@ -95,41 +106,65 @@ const loadGames = async () => {
   }
 }
 
-// Event-Handler für Paginierung
 const handlePageChange = (page) => {
-  pagination.value.currentPage = page
+  updateParams({ page: page })
   loadGames()
 }
 
-// Event-Handler für Filter
 const handleFilterChange = (filters) => {
-  currentFilters.value = { ...currentFilters.value, ...filters }
-  pagination.value.currentPage = 1 // Zurück zur ersten Seite
+  updateParams({
+    columnFilters: { ...serverParams.value.columnFilters, ...filters },
+    page: 1
+  })
   loadGames()
 }
 
-// Event-Handler für Sortierung
 const handleSortChange = (sort) => {
-  currentFilters.value.sortBy = sort.sortBy
-  currentFilters.value.sortOrder = sort.sortOrder
+  if (!sort.sortBy || !sort.sortOrder) {
+    console.warn('Ungültige Sortierung in BasarView:', sort)
+    return
+  }
+  updateParams({
+    sort: {
+      field: sort.sortBy,
+      type: sort.sortOrder
+    }
+  })
   loadGames()
 }
 
-// Event-Handler für Seitengröße
 const handlePerPageChange = (perPage) => {
-  pagination.value.pageSize = perPage
-  pagination.value.currentPage = 1 // Zurück zur ersten Seite
+  updateParams({
+    perPage: perPage,
+    page: 1 
+  })
   loadGames()
 }
 
-// Event-Handler für Suche
 const handleSearchChange = (searchTerm) => {
-  currentFilters.value.search = searchTerm
-  pagination.value.currentPage = 1 // Zurück zur ersten Seite
+  updateParams({
+    columnFilters: { ...serverParams.value.columnFilters, search: searchTerm },
+    page: 1 
+  })
   loadGames()
 }
 
 onMounted(() => {
+  serverParams.value = {
+    columnFilters: {
+      spieldatum: '',
+      ligaName: '',
+      spielfeldName: '',
+      search: ''
+    },
+    sort: {
+      field: 'spieldatum',
+      type: 'ASC'
+    },
+    page: 1,
+    perPage: pagination.value.pageSize
+  }
+  
   loadGames()
 })
 </script>

@@ -1,12 +1,10 @@
 import { apiClient } from './api-client';
-import { getAuthUrl } from '@/config/env';
 
 class AuthService {
   async login(user) {
     try {
-      console.log(user)
-      const response = await apiClient.post(getAuthUrl('signin'), {
-        email: user.email,
+      const response = await apiClient.post('/users/login', {
+        username: user.username || user.email, // Unterstützt sowohl username als auch email
         password: user.password
       })
       return response.data
@@ -20,35 +18,9 @@ class AuthService {
     // localStorage wird von Pinia Store verwaltet
   }
 
-  async register(user) {
-    try {
-      const response = await apiClient.post(getAuthUrl('signup'), {
-        username: user.username,
-        email: user.email,
-        password: user.password
-      })
-      return response.data
-    } catch (error) {
-      console.error('Registrierungs-Fehler:', error)
-      throw error
-    }
-  }
-
-  async delete(user) {
-    try {
-      const response = await apiClient.post(getAuthUrl('user'), {
-        id: user.id
-      })
-      return response.data
-    } catch (error) {
-      console.error('Lösch-Fehler:', error)
-      return false
-    }
-  }
-
   async reset(email) {
     try {
-      const response = await apiClient.post(getAuthUrl('reset'), {
+      const response = await apiClient.post('/users/forgot-password', {
         email: email
       })
       return response.data
@@ -60,7 +32,7 @@ class AuthService {
 
   async validateResetToken(token) {
     try {
-      const response = await apiClient.post(getAuthUrl('validate-reset-token'), {
+      const response = await apiClient.post('/users/validate-reset-token', {
         token: token
       })
       return response.data
@@ -72,9 +44,9 @@ class AuthService {
 
   async resetPassword(token, password) {
     try {
-      const response = await apiClient.post(getAuthUrl('reset-password'), {
-        token: token,
-        password: password
+      const response = await apiClient.post('/users/reset-password', {
+        resetToken: token,
+        newPassword: password
       })
       return response.data
     } catch (error) {

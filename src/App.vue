@@ -25,9 +25,10 @@ import AppFooter from './components/layout/AppFooter.vue'
 }
 
 .main-content {
-  flex: 1;
+  flex: 0 1 auto;
   background: linear-gradient(135deg, var(--bs-primary), var(--bs-dark));
   display: flex;
   flex-direction: column;
+  min-height: calc(100vh - 176px); /* Anpassung an Header (80px) + Footer (80px) */
 }
 </style>

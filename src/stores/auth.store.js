@@ -10,7 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Token Validierung
   const isTokenValid = computed(() => {
-    if (!user.value || !user.value.accessToken) return false
+    if (!user.value || !user.value.token) return false
     
     // Prüfe expireDate falls vorhanden
     if (user.value.expireDate) {
@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
     
     // Fallback: Prüfe ob Token vorhanden ist
-    return !!user.value.accessToken
+    return !!user.value.token
   })
 
   // Authentifizierungsstatus basierend auf Token-Gültigkeit
@@ -28,20 +28,25 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Admin-Status basierend auf User-Rollen
   const isUserAdmin = computed(() => {
-    if (!user.value || !user.value.roles) return false
-    return user.value.roles.includes('admin')
+    if (!user.value || !user.value.role) return false
+    return user.value.role === 'admin'
   })
 
   // Actions
   const login = async (credentials) => {
     try {
       const response = await AuthService.login(credentials)
-      if (response.accessToken) {
-        user.value = response
-        isAdmin.value = response.roles?.includes('admin') || false
-        return { success: true, data: response }
+      if (response.success && response.data?.token) {
+        const userData = {
+          ...response.data.user,
+          token: response.data.token,
+          accessToken: response.data.token // Für Kompatibilität
+        }
+        user.value = userData
+        isAdmin.value = userData.role === 'admin'
+        return { success: true, data: userData }
       }
-      return { success: false, error: 'Login fehlgeschlagen' }
+      return { success: false, error: response.message || 'Login fehlgeschlagen' }
     } catch (error) {
       console.error('Login error:', error)
       return { success: false, error: error.response?.data?.message || 'Login fehlgeschlagen' }
@@ -51,16 +56,6 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = () => {
     user.value = null
     isAdmin.value = false
-  }
-
-  const register = async (userData) => {
-    try {
-      const response = await AuthService.register(userData)
-      return { success: true, data: response }
-    } catch (error) {
-      console.error('Register error:', error)
-      return { success: false, error: error.response?.data?.message || 'Registrierung fehlgeschlagen' }
-    }
   }
 
   const resetPassword = async (email) => {
@@ -73,25 +68,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const deleteUser = async (userData) => {
-    try {
-      const response = await AuthService.delete(userData)
-      return { success: true, data: response }
-    } catch (error) {
-      console.error('Delete user error:', error)
-      return { success: false, error: error.response?.data?.message || 'Benutzer-Löschung fehlgeschlagen' }
-    }
-  }
-
   const setToken = async (token) => {
     if (!user.value) user.value = {}
-    user.value.accessToken = token
+    user.value.token = token
+    user.value.accessToken = token // Für Kompatibilität
   }
 
   const setUser = async (userData) => {
     if (!user.value) user.value = {}
     user.value = { ...user.value, ...userData }
-    isAdmin.value = userData.roles?.includes('admin') || false
+    isAdmin.value = userData.role === 'admin'
   }
 
   // Getters
@@ -100,7 +86,7 @@ export const useAuthStore = defineStore('auth', () => {
   const getIsAdmin = () => isUserAdmin.value
   const getUserName = () => {
     if (!user.value) return 'Benutzer'
-    return `${user.value.firstName || ''} ${user.value.lastName || ''}`.trim() || user.value.username || 'Benutzer'
+    return user.value.name || user.value.username || 'Benutzer'
   }
 
   return {
@@ -112,9 +98,7 @@ export const useAuthStore = defineStore('auth', () => {
     // Actions
     login,
     logout,
-    register,
     resetPassword,
-    deleteUser,
     setToken,
     setUser,
     

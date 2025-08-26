@@ -16,6 +16,11 @@
               <font-awesome-icon icon="fa-solid fa-envelope" class="me-2" />
               Probleme melden
             </a>
+            <!-- Verwaltung Button - nur für nicht authentifizierte Benutzer -->
+            <router-link v-if="!isAuthenticated" to="/login" class="footer-link">
+              <font-awesome-icon icon="fa-solid fa-cog" class="me-1" />
+              Verwaltung
+            </router-link>
             <span class="footer-copyright">
               © 2025 Dirk Drutschmann
             </span>
@@ -27,6 +32,12 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth.store'
+
+const authStore = useAuthStore()
+const isAuthenticated = computed(() => authStore.getIsAuthenticated())
+
 const githubFrontendUrl = import.meta.env.VITE_GITHUB_FRONTEND_URL || 'https://github.com/drutschmann/spielebasar-frontend'
 const githubBackendUrl = import.meta.env.VITE_GITHUB_BACKEND_URL || 'https://github.com/drutschmann/spielebasar-backend'
 </script>
@@ -65,6 +76,7 @@ const githubBackendUrl = import.meta.env.VITE_GITHUB_BACKEND_URL || 'https://git
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.875rem;
 }
+
 
 @media (max-width: 991.98px) {
   .footer-links {

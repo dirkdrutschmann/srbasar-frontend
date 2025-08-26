@@ -80,54 +80,8 @@ export const pagination = {
 export const sort = {
   enabled: true,
   multiColumn: true,
-  initialSortBy: { field: 'kickoffDate', type: 'asc' }
+  initialSortBy: { field: 'datum', type: 'asc' }
 }
 
 export { fieldFn }
 
-export const columns = [
-    {
-        label: 'Datum',
-        field: 'kickoffDate',
-        type: 'date',
-        dateInputFormat: 'yyyy-MM-dd',
-        dateOutputFormat: 'dd.MM.yyyy',
-        tdClass: 'text-center',
-        filterOptions: {
-            enabled: true, // enable filter for this column
-            filterDropdownItems: [], // dropdown (with selected values) instead of text input
-            filterFn: function (data, filterString) {
-                return format(new Date(data), "dd.MM.yyyy").includes(filterString)
-            }, //custom filter function that
-            trigger: 'keyup', //only trigger on enter not on keyup
-        },
-    },
-    {
-        label: 'Halle',
-        field: 'spielfeld',
-        filterOptions: {
-            enabled: true, // enable filter for this column
-        },
-        tdClass: 'text-center'
-    },
-    {
-        label: 'Zeit',
-        field: 'kickoffTime',
-        type: 'date',
-        tdClass: 'text-center',
-        dateInputFormat: 'HH:mm',
-        dateOutputFormat: 'HH:mm',
-        filterOptions: {
-            enabled: true, // enable filter for this column
-        },
-    },
-    {
-        label: 'Lizenz',
-        field: fieldFn,
-        tdClass: 'text-center',
-        filterOptions: {
-            enabled: true, // enable filter for this column
-            filterDropdownItems: ["LSE", "LSE+ | LSD", "LSD"],
-        },
-    },
-]

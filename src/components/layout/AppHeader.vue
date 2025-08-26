@@ -1,12 +1,9 @@
 <template>
   <nav class="navbar navbar-expand-lg">
     <div class="container">
-      <router-link class="navbar-brand" to="/">
-        <img src="@/assets/whistle-icon.svg?data" width="24" alt="whistle"/> 
-        {{ appTitle }}
-      </router-link>
-      
+      <!-- Toggler Button für mobile - nur wenn angemeldet -->
       <button 
+        v-if="isAuthenticated"
         class="navbar-toggler bg-white" 
         type="button" 
         data-bs-toggle="collapse" 
@@ -18,63 +15,38 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       
+      <!-- Logo zentriert - außerhalb des Collapse-Containers -->
+      <router-link class="navbar-brand navbar-brand-center" to="/">
+        <img src="@/assets/whistle-icon.svg?data" width="24" alt="whistle"/> 
+        {{ appTitle }}
+      </router-link>
+      
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto">
-   
-          <li  class="nav-item">
+        <!-- Navigation nur für eingeloggte Benutzer -->
+        <ul v-if="isAuthenticated" class="navbar-nav me-auto">
+          <li class="nav-item">
             <router-link class="nav-link" to="/basar">
               <font-awesome-icon icon="fa-solid fa-basketball" class="me-1" />
               Basar
             </router-link>
           </li>
-          <li v-if="isAuthenticated" class="nav-item dropdown">
-            <a 
-              class="nav-link dropdown-toggle" 
-              href="#" 
-              role="button" 
-              data-bs-toggle="dropdown" 
-              aria-expanded="false"
-            >
-              <font-awesome-icon icon="fa-solid fa-calendar" class="me-1" />
-              Spiele
-            </a>
-            <ul class="dropdown-menu">
-              <li>
-                <router-link class="dropdown-item" to="/all">
-                  <font-awesome-icon icon="fa-solid fa-list" class="me-2" />
-                  Alle
-                </router-link>
-              </li>
-              <li>
-                <router-link class="dropdown-item" to="/games">
-                  <font-awesome-icon icon="fa-solid fa-users" class="me-2" />
-                  Verein
-                </router-link>
-              </li>
-              <li>
-                <router-link class="dropdown-item" to="/history">
-                  <font-awesome-icon icon="fa-solid fa-history" class="me-2" />
-                  Historie
-                </router-link>
-              </li>
-            </ul>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/vereine">
+              <font-awesome-icon icon="fa-solid fa-users" class="me-1" />
+              Vereine
+            </router-link>
           </li>
-          <li v-if="isAuthenticated" class="nav-item">
-            <router-link class="nav-link" to="/links">
-              <font-awesome-icon icon="fa-solid fa-link" class="me-1" />
-              Links
+          <li v-if="isAdmin" class="nav-item">
+            <router-link class="nav-link" to="/admin/users">
+              <font-awesome-icon icon="fa-solid fa-users-cog" class="me-1" />
+              Admin
             </router-link>
           </li>
         </ul>
         
-        <ul class="navbar-nav">
-          <li v-if="!isAuthenticated" class="nav-item">
-            <router-link class="nav-link" to="/login">
-              <font-awesome-icon icon="fa-solid fa-sign-in-alt" class="me-1" />
-              Anmelden
-            </router-link>
-          </li>
-          <li v-else class="nav-item dropdown">
+        <!-- Benutzer-Dropdown nur für eingeloggte Benutzer -->
+        <ul v-if="isAuthenticated" class="navbar-nav">
+          <li class="nav-item dropdown">
             <a 
               class="nav-link dropdown-toggle" 
               href="#" 
@@ -90,12 +62,6 @@
                 <router-link class="dropdown-item" to="/profile">
                   <font-awesome-icon icon="fa-solid fa-user-cog" class="me-2" />
                   Profil
-                </router-link>
-              </li>
-              <li>
-                <router-link class="dropdown-item" to="/users">
-                  <font-awesome-icon icon="fa-solid fa-users" class="me-2" />
-                  Benutzer
                 </router-link>
               </li>
               <li><hr class="dropdown-divider"></li>
@@ -124,7 +90,8 @@ const authStore = useAuthStore()
 
 const isAuthenticated = computed(() => authStore.getIsAuthenticated())
 const currentUser = computed(() => authStore.getCurrentUser())
-const appTitle = import.meta.env.VITE_APP_TITLE || 'BBV-Spielebasar'
+const isAdmin = computed(() => currentUser.value?.role === 'admin')
+const appTitle = import.meta.env.VITE_APP_TITLE || 'SR Basar'
 
 const logout = () => {
   authStore.logout()
@@ -136,14 +103,49 @@ const logout = () => {
 .navbar {
   background: linear-gradient(135deg, var(--bs-primary), var(--bs-dark));
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 1rem 0;
+  padding: 1.5rem 0;
   flex-shrink: 0;
+  position: relative;
+  min-height: 80px;
 }
 
 .navbar-brand {
   font-weight: 700;
   font-size: 1.25rem;
   color: white !important;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Logo zentrieren auf großen Bildschirmen */
+.navbar-brand-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+/* Für kleine Bildschirme: Logo fest positioniert */
+@media (max-width: 991.98px) {
+  .navbar-brand-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 1rem;
+    z-index: 1001;
+  }
+  
+  .navbar {
+    padding: 1rem 0;
+    min-height: 70px;
+  }
+  
+  /* Platz für das Logo im Collapse-Container */
+  .navbar-collapse {
+    margin-top: 3rem;
+  }
 }
 
 .navbar-brand:hover {

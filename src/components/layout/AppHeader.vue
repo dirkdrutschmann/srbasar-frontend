@@ -20,49 +20,16 @@
       
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
-   
-          <li  class="nav-item">
+          <li class="nav-item">
             <router-link class="nav-link" to="/basar">
               <font-awesome-icon icon="fa-solid fa-basketball" class="me-1" />
               Basar
             </router-link>
           </li>
-          <li v-if="isAuthenticated" class="nav-item dropdown">
-            <a 
-              class="nav-link dropdown-toggle" 
-              href="#" 
-              role="button" 
-              data-bs-toggle="dropdown" 
-              aria-expanded="false"
-            >
-              <font-awesome-icon icon="fa-solid fa-calendar" class="me-1" />
-              Spiele
-            </a>
-            <ul class="dropdown-menu">
-              <li>
-                <router-link class="dropdown-item" to="/all">
-                  <font-awesome-icon icon="fa-solid fa-list" class="me-2" />
-                  Alle
-                </router-link>
-              </li>
-              <li>
-                <router-link class="dropdown-item" to="/games">
-                  <font-awesome-icon icon="fa-solid fa-users" class="me-2" />
-                  Verein
-                </router-link>
-              </li>
-              <li>
-                <router-link class="dropdown-item" to="/history">
-                  <font-awesome-icon icon="fa-solid fa-history" class="me-2" />
-                  Historie
-                </router-link>
-              </li>
-            </ul>
-          </li>
           <li v-if="isAuthenticated" class="nav-item">
-            <router-link class="nav-link" to="/links">
-              <font-awesome-icon icon="fa-solid fa-link" class="me-1" />
-              Links
+            <router-link class="nav-link" to="/vereine">
+              <font-awesome-icon icon="fa-solid fa-users" class="me-1" />
+              Vereine
             </router-link>
           </li>
         </ul>
@@ -92,12 +59,6 @@
                   Profil
                 </router-link>
               </li>
-              <li>
-                <router-link class="dropdown-item" to="/users">
-                  <font-awesome-icon icon="fa-solid fa-users" class="me-2" />
-                  Benutzer
-                </router-link>
-              </li>
               <li><hr class="dropdown-divider"></li>
               <li>
                 <a class="dropdown-item" href="#" @click.prevent="logout">
@@ -124,7 +85,7 @@ const authStore = useAuthStore()
 
 const isAuthenticated = computed(() => authStore.getIsAuthenticated())
 const currentUser = computed(() => authStore.getCurrentUser())
-const appTitle = import.meta.env.VITE_APP_TITLE || 'BBV-Spielebasar'
+const appTitle = import.meta.env.VITE_APP_TITLE || 'SR Basar'
 
 const logout = () => {
   authStore.logout()

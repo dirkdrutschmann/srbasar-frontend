@@ -1,508 +1,699 @@
 <template>
   <div class="mt-0">
+    <!-- Collapsible Filter-Bereich -->
+    <div class="filters-section mb-3">
+      <div class="filters-header" @click="toggleFilters">
+        <h5 class="mb-0">
+          <i class="fas fa-filter me-2"></i>
+          Filter anzeigen
+          <i :class="filtersCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'" class="ms-2"></i>
+        </h5>
+      </div>
+      
+      <div v-show="!filtersCollapsed" class="filters-content">
+        <div class="row">
+          <div class="col-md-4">
+            <label class="form-label">Spielfeld</label>
+            <Multiselect
+              v-model="localFilters.spielfeldName"
+              :options="availableFilters.spielfeldName"
+              :searchable="true"
+              :create-option="false"
+              placeholder="Alle Spielfelder"
+              noOptionsText="Keine Optionen verfügbar"
+              noResultsText="Keine Ergebnisse gefunden"
+              @change="applyFilters"
+              class="custom-multiselect"
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Liga</label>
+            <Multiselect
+              v-model="localFilters.ligaName"
+              :options="availableFilters.ligaName"
+              :searchable="true"
+              :create-option="false"
+              placeholder="Alle Ligen"
+              noOptionsText="Keine Optionen verfügbar"
+              noResultsText="Keine Ergebnisse gefunden"
+              @change="applyFilters"
+              class="custom-multiselect"
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Globale Suche</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <font-awesome-icon icon="fa-solid fa-magnifying-glass" />
+              </span>
+              <input 
+                type="text" 
+                v-model="localFilters.search" 
+                class="form-control"
+                placeholder="Suche nach Team, Verein, Ort..."
+                @input="debounceSearch"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-12 d-flex justify-content-center gap-2">
+            <Datepicker
+              v-model="localFilters.spieldatum"
+              :enable-time-picker="false"
+              :locale="'de'"
+              :auto-apply="true"
+              :close-on-auto-apply="true"
+              :teleport-to="'body'"
+              :allowed-dates="availableDates"
+              teleport-center 
+              class="custom-datepicker"
+            >
+              <template #trigger>
+                <button 
+                  type="button" 
+                  class="btn btn-outline-secondary btn-sm datepicker-trigger"
+                  :class="{ 'active': localFilters.spieldatum }"
+                >
+                  <font-awesome-icon icon="fa-solid fa-calendar" class="me-1" />
+                  {{ localFilters.spieldatum ? formatDateForDisplay(localFilters.spieldatum.getTime().toString()) : 'Datum auswählen' }}
+                </button>
+              </template>
+            </Datepicker>
+            
+            <button 
+              @click="clearFilters" 
+              class="btn btn-outline-secondary btn-sm"
+              :disabled="loading"
+            >
+              <i class="fas fa-undo me-1"></i>Filter zurücksetzen
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabelle mit Server-Side-Modus -->
     <vue-good-table
         ref="my-table"
+        mode="remote"
         :columns="columns"
-        :enable-row-expand="true"
-        :pagination-options="pagination"
-        :row-style-class="rowStyleClassFn"
         :rows="games"
-        :search-options="search"
-        :sort-options="sort"
-        expanded-row-classes="bg-red"
-        expanded-row-detail-classes="bg-yellow"
+        :totalRows="pagination.totalItems"
+        :isLoading.sync="loading"
+        :pagination-options="{
+          enabled: true,
+          perPage: pagination.pageSize,
+          perPageDropdown: [10, 20, 50, 100],
+          perPageDropdownEnabled: true
+        }"
         theme="nocturnal"
+        :search-options="{
+          enabled: false // Server-seitige Suche
+        }"
+        :sort-options="{
+          enabled: true,
+          initialSortBy: { field: 'datum', type: 'asc' }
+        }"
+        @page-change="onPageChange"
+        @per-page-change="onPerPageChange"
+        @sort-change="onSortChange"
+        @column-filter="onColumnFilter"
     >
-      <template #row-details="props">
-        <div class="row mx-auto justify-content-center">
-          <div class="col-6 mt-1" v-if="props.row.sr1Basar">
-            <div :class="{'basar': props.row.sr1Basar, 'besetzt':props.row.sr1Besetzt , 'offen': !props.row.sr1Besetzt}" class="border border-white p-2 rounded-3 position-relative">
-              <p>SR1:</p>
-              <h5>
-                <a class="stretched-link text-decoration-none text-reset" data-bs-target="#sr1" data-bs-toggle="modal">
-                  <img src="@/assets/whistle-icon.svg?data" width="24" alt="whistle"/>&nbsp;
-                  {{ props.row.sr1 }}
-                </a></h5>
-              <h4 v-show="props.row.sr1Bonus > 0">
-                <font-awesome-icon icon="fa-regular fa-money-bill-1"/>
-                {{ props.row.sr1Bonus }} €
-              </h4>
-            </div>
-          </div>
-
-          <div v-if="props.row.sr1Basar" id="sr1" aria-hidden="true" class="modal fade"
-               tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content bg-nocture">
-                <div class="modal-header">
-                  <h1 id="exampleModalLabel" class="modal-title fs-5">{{ props.row.liganame }}
-                    {{ props.row.matchNo }}</h1>
-                  <button ref="1" aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
-                </div>
-                <div class="modal-body">
-                  <h3>
-                    <img src="@/assets/whistle-icon.svg?data" width="24" alt="whistle"/>&nbsp;{{ props.row.sr1 }}
-                  </h3>
-                  <div v-for="(contact, index) in props.row.sr1Contact" :key="index">
-                    <hr class="my-3">
-                      <h4  v-if="contact.name">
-                      <font-awesome-icon icon="fa-solid fa-user"/>&nbsp;
-                        {{ contact.name }}</h4>
-                    <p v-if="contact.showInfo">
-                      <font-awesome-icon icon="fa-solid fa-circle-info"/>&nbsp;
-                      {{ contact.contactInfo }}
-                    </p>
-                    <p v-if="contact.showContact">
-                      <font-awesome-icon icon="fa-solid fa-mobile"/>&nbsp;
-                      <a :href="'tel:'+contact.phone" class="text-decoration-none text-reset">{{ contact.phone }}</a>
-                      <br v-if="contact.whatsapp"/> <br v-if="contact.whatsapp"/>
-                      <a :href="getWhatsappLink(contact.phone, props.row, props.row.sr1)" aria-label="Chat on WhatsApp"
-                         v-if="contact.whatsapp">
-                        <img src="@/assets/WhatsAppButtonGreenMedium.svg?data" alt="whatsapp"/></a>
-                    </p>
-                    <p v-if="contact.showMail">
-                      <font-awesome-icon icon="fa-regular fa-envelope"/>&nbsp;
-                      <a :href="getMailLink(contact.email, props.row, props.row.sr1)"
-                         class="text-decoration-none text-reset">{{ contact.email }}</a>
-                      <br><br>
-                      <a :href="getMailLink(contact.email, props.row, props.row.sr1)" aria-label="Mail">
-                        <img src="@/assets/email.svg?data" alt="email" width="189"/></a>
-                    </p>
-
-                </div>
-                  <div v-if="!!props.row.sr1Contact.some(sr => sr.getEmails ? sr.getEmails : false)" class="border border-white p-2 rounded-3 mt-5 ">
-                    <h5>Spiel übernehmen</h5>
-                    <div class="mb-3">
-                      <label class="form-label" for="exampleFormControlInput1">Name</label>
-                      <input id="text" v-model="contactName" class="form-control" placeholder="Name" type="text">
-                    </div>
-                    <select v-model="contactLizenz" class="form-select mb-3">
-                      <option disabled value="-1">Lizenz wählen</option>
-                      <option value="LSE">LSE</option>
-                      <option value="LSE">LSE+</option>
-                      <option value="LSD">LSD oder höher</option>
-                    </select>
-                    <div class="mb-3">
-                      <label class="form-label" for="email">E-Mail-Adresse</label>
-                      <input id="email" v-model="contactEmail" class="form-control"
-                             placeholder="E-Mail-Adresse" type="text">
-                      <label class="form-label" for="mobile">Handynummer</label>
-                      <MazPhoneNumberInput
-                          v-model="contactMobile"
-                          :preferred-countries="['DE','FR', 'BE', 'US', 'GB']"
-                          :success="results?.isValid"
-                          @update="results= $event;"
-                          :default-country-code="'DE'"
-                          :translations="{
-                              countrySelector: {
-                                placeholder: 'Länderkennung',
-                                error: 'Wähle ein Land',
-                              },
-                              phoneInput: {
-                                placeholder: 'Telefonnummer',
-                                example: 'Beispiel:',
-                              },
-                            }"
-                          color="info"
-                          show-code-on-list
-                      />
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label" for="exampleFormControlTextarea1">Nachricht</label>
-                      <textarea id="exampleFormControlTextarea1" v-model="contactMessage" class="form-control"
-                                rows="3"></textarea>
-                    </div>
-                    <div class="form-check-inline">
-                      <input id="flexCheckDefault" v-model="contactSaveInfo" class="form-check-input" type="checkbox"
-                             value="">
-                      <label class="form-check-label" for="flexCheckDefault">
-                        Daten speichern
-                      </label>
-                    </div>
-                    <button class="btn btn-outline-light" @click="contactEmail || (contactMobile && results.isValid) ? sendMail(props.row.matchId, 1, props.row.sr1) : message('Es muss eine Email oder Handynummer angegeben werden.')">
-                      Senden
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-6 mt-1" v-if="props.row.sr2Basar">
-            <div :class="{'basar': props.row.sr2Basar, 'besetzt':props.row.sr2Besetzt , 'offen': !props.row.sr2Besetzt}" class="border border-white p-2 rounded-3 position-relative">
-              <p>SR2:</p>
-              <h5>
-                <a class="stretched-link text-decoration-none text-reset" data-bs-target="#sr2" data-bs-toggle="modal">
-                  <img src="@/assets/whistle-icon.svg?data" width="24" alt="whistle"/>&nbsp;{{ props.row.sr2 }}
-                </a>
-              </h5>
-              <h4 v-show="props.row.sr2Bonus > 0">
-                <font-awesome-icon icon="fa-regular fa-money-bill-1"/>&nbsp;
-                {{ props.row.sr2Bonus }} €
-              </h4>
-            </div>
-          </div>
-
-          <div v-if="props.row.sr2Basar" id="sr2" aria-hidden="true"
-               class="modal fade"
-               tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content bg-nocture">
-                <div class="modal-header">
-                  <h1 id="exampleModalLabel" class="modal-title fs-5">{{ props.row.liganame }}
-                    {{ props.row.matchNo }}</h1>
-                  <button ref="2" aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
-                </div>
-                <div class="modal-body">
-                  <h3>
-                    <img src="@/assets/whistle-icon.svg?data" width="24" alt="whistle"/>&nbsp;{{ props.row.sr2 }}
-                  </h3>
-                  <div v-for="(contact, index) in props.row.sr2Contact" :key="index">
-                    <hr class="my-3">
-                    <h4  v-if="contact.name">
-                      <font-awesome-icon icon="fa-solid fa-user"/>&nbsp;
-                      {{ contact.name }}</h4>
-                    <p v-if="contact.showInfo">
-                      <font-awesome-icon icon="fa-solid fa-circle-info"/>&nbsp;
-                      {{ contact.contactInfo }}
-                    </p>
-                    <p v-if="contact.showContact">
-                      <font-awesome-icon icon="fa-solid fa-mobile"/>&nbsp;
-                      <a :href="'tel:'+contact.phone" class="text-decoration-none text-reset">{{ contact.phone }}</a>
-                      <br v-if="contact.whatsapp"/> <br v-if="contact.whatsapp"/>
-                      <a :href="getWhatsappLink(contact.phone, props.row, props.row.sr2)" aria-label="Chat on WhatsApp"
-                         v-if="contact.whatsapp">
-                        <img src="@/assets/WhatsAppButtonGreenMedium.svg?data" alt="whatsapp"/></a>
-                    </p>
-                    <p v-if="contact.showMail">
-                      <font-awesome-icon icon="fa-regular fa-envelope"/>&nbsp;
-                      <a :href="getMailLink(contact.email, props.row, props.row.sr2)"
-                         class="text-decoration-none text-reset">{{ contact.email }}</a>
-                      <br><br>
-                      <a :href="getMailLink(contact.email, props.row, props.row.sr2)" aria-label="Mail">
-                        <img src="@/assets/email.svg?data" alt="email" width="189"/></a>
-                    </p>
-
-                  </div>
-                  <div v-if="!!props.row.sr2Contact.some(sr => sr.getEmails ? sr.getEmails : false)" class="border border-white p-2 rounded-3 mt-5 ">
-                    <h5>Spiel übernehmen</h5>
-                    <div class="mb-3">
-                      <label class="form-label" for="exampleFormControlInput1">Name</label>
-                      <input id="text" v-model="contactName" class="form-control" placeholder="Name" type="text">
-                    </div>
-                    <select v-model="contactLizenz" class="form-select mb-3">
-                      <option disabled value="-1">Lizenz wählen</option>
-                      <option value="LSE">LSE</option>
-                      <option value="LSE">LSE+</option>
-                      <option value="LSD">LSD oder höher</option>
-                    </select>
-                    <div class="mb-3">
-                      <label class="form-label" for="email">E-Mail-Adresse</label>
-                      <input id="email" v-model="contactEmail" class="form-control"
-                             placeholder="E-Mail-Adresse" type="text">
-                      <label class="form-label" for="mobile">Handynummer</label>
-                      <MazPhoneNumberInput
-                          v-model="contactMobile"
-                          :preferred-countries="['DE','FR', 'BE', 'US', 'GB']"
-                          :success="results?.isValid"
-                          @update="results= $event;"
-                          :no-use-browser-locale="true"
-                          :default-country-code="'DE'"
-                          :translations="{
-                              countrySelector: {
-                                placeholder: 'Länderkennung',
-                                error: 'Wähle ein Land',
-                              },
-                              phoneInput: {
-                                placeholder: 'Telefonnummer',
-                                example: 'Beispiel:',
-                              },
-                            }"
-                          color="info"
-                          show-code-on-list
-                      />
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label" for="exampleFormControlTextarea1">Nachricht</label>
-                      <textarea id="exampleFormControlTextarea1" v-model="contactMessage" class="form-control"
-                                rows="3"></textarea>
-                    </div>
-                    <div class="form-check-inline">
-                      <input id="flexCheckDefault" v-model="contactSaveInfo" class="form-check-input" type="checkbox"
-                             value="">
-                      <label class="form-check-label" for="flexCheckDefault">
-                        Daten speichern
-                      </label>
-                    </div>
-                    <button class="btn btn-outline-light" @click="contactEmail || (contactMobile && results.isValid) ? sendMail(props.row.matchId, 1, props.row.sr2) : message('Es muss eine Email oder Handynummer angegeben werden.')">
-                      Senden
-                    </button>
-                  </div>
-                </div>
-              </div>
-              </div>
-            </div>
+      <template #emptystate>
+        <div class="text-center py-4">
+          <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+          <p class="text-muted">Es sind keine Spiele im Basar vorhanden.</p>
         </div>
       </template>
-      <template #emptystate>
-        Es sind keine Spiele im Basar vorhanden.
+      
+      <template #loadingContent>
+        <div class="text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Laden...</span>
+          </div>
+        </div>
       </template>
     </vue-good-table>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { fieldFn, pagination, search, sort } from '@/config/datatable.config'
-import GamesService from "@/services/games.service"
-import MazPhoneNumberInput from "maz-ui/components/MazPhoneNumberInput"
-import { format } from "date-fns"
+import { ref, computed, watch } from 'vue'
+import Multiselect from 'vue-multiselect'
+import Datepicker from '@vuepic/vue-datepicker'
 
-const games = ref([])
-const contactMobile = ref("")
-const contactEmail = ref("")
-const contactName = ref("")
-const contactWay = ref([])
-const results = ref({})
-const contactLizenz = ref("-1")
-const contactMessage = ref("")
-const contactSaveInfo = ref(false)
-
-const getWhatsappLink = (phone, game, sr) => {
-  var number = phone
-  if (number[0] === "+") {
-    number = number.substring(1)
+const props = defineProps({
+  games: {
+    type: Array,
+    default: () => []
+  },
+  pagination: {
+    type: Object,
+    default: () => ({})
+  },
+  availableFilters: {
+    type: Object,
+    default: () => ({})
+  },
+  loading: {
+    type: Boolean,
+    default: false
+  },
+  availableDates: {
+    type: Array,
+    default: () => []
   }
-  return 'https://wa.me/' + number + '?text=' + encodeURI(`Hallo, ich würde gern das Spiel *${game.liganame}${game.matchNo}* am *${new Date(game.kickoffDate).getDate()}.${new Date(game.kickoffDate).getMonth() + 1}.${new Date(game.kickoffDate).getFullYear()}* um *${game.kickoffTime}* *${game.spielfeld}* für *${sr}* übernehmen. Liebe Grüße`)
+})
+
+const emit = defineEmits(['page-change', 'filter-change', 'sort-change', 'search-change', 'per-page-change'])
+
+// Collapsible Filter
+const filtersCollapsed = ref(true)
+
+// Lokale Filter
+const localFilters = ref({
+  spieldatum: null,
+  ligaName: '',
+  spielfeldName: '',
+  search: ''
+})
+
+// Verfügbare Datums für den Datepicker
+const availableDates = computed(() => {
+  if (!props.availableFilters.spieldatum) return []
+  
+  return props.availableFilters.spieldatum.map(timestamp => {
+    const date = new Date(parseInt(timestamp))
+    return date
+  })
+})
+
+// Filter ein-/ausklappen
+const toggleFilters = () => {
+  filtersCollapsed.value = !filtersCollapsed.value
 }
 
-const text = (text) => {
-  if(text === "basar"){
-    return "im Basar"
+// Debounce für Suche
+let searchTimeout = null
+const debounceSearch = () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    applyFilters()
+  }, 500)
+}
+
+// Filter anwenden
+const applyFilters = () => {
+  emit('filter-change', { ...localFilters.value })
+}
+
+// Filter zurücksetzen
+const clearFilters = () => {
+  localFilters.value = {
+    spieldatum: null,
+    ligaName: '',
+    spielfeldName: '',
+    search: ''
   }
-  return text
+  
+  applyFilters()
 }
 
-const getMailLink = (mail, game, sr) => {
-  return 'mailto:' + mail + '?body=' + encodeURI(`Hallo,
 
-ich würde gern das Spiel ${game.liganame}${game.matchNo}
-am ${new Date(game.kickoffDate).getDate()}.${new Date(game.kickoffDate).getMonth() + 1}.${new Date(game.kickoffDate).getFullYear()} um ${game.kickoffTime}
-${game.spielfeld}
-für ${sr} übernehmen.
 
-Liebe Grüße`) + encodeURI("&") + "subject=" + encodeURI(`[SPIELEBASAR] Übernahme ${game.liganame}${game.matchNo}`)
+// Event-Handler für Remote-Modus
+const onPageChange = (params) => {
+  emit('page-change', params.currentPage)
 }
 
-const rowStyleClassFn = (row) => {
-  if (row.sr1Basar && row.sr2Basar) {
-    return 'spielausfall'
-  }
+const onPerPageChange = (params) => {
+  emit('per-page-change', params.currentPerPage)
 }
 
-const updateLocal = () => {
-  if (contactSaveInfo.value) {
-    localStorage.setItem('contact', JSON.stringify({
-      name: contactName.value,
-      mobile: contactMobile.value,
-      email: contactEmail.value,
-      lizenz: contactLizenz.value,
-      saveInfo: contactSaveInfo.value
-    }))
-  }
-}
-
-const message = (text) => {
-  alert(text)
-}
-
-const sendMail = (match, ref, sr) => {
-  if (confirm("Wirklich absenden?")) {
-    GamesService.uebernehmen(match, {
-      sr: sr,
-      name: contactName.value,
-      mobile: contactMobile.value,
-      email: contactEmail.value,
-      lizenz: contactLizenz.value,
-      message: contactMessage.value
-    })
-
-    if (contactSaveInfo.value) {
-      contactMessage.value = ""
-    } else {
-      contactLizenz.value = -1
-      contactMobile.value = ""
-      contactEmail.value = ""
-      contactMessage.value = ""
-      contactName.value = ""
+const onSortChange = (params) => {
+  const { sortBy, sortType, columnIndex } = params
+  const sortOrder = sortType === 'asc' ? 'ASC' : 'DESC'
+  
+  // Verwende sortField aus der Spalten-Definition oder fallback auf das ursprüngliche Feld
+  let backendSortField = sortBy
+  
+  // Versuche columnIndex zu verwenden, falls verfügbar
+  if (columnIndex !== undefined && columns[columnIndex]) {
+    const column = columns[columnIndex]
+    backendSortField = column.sortField || sortBy
+  } else {
+    // Fallback: Mappe bekannte Felder manuell
+    if (sortBy === 'datum' || sortBy === 'zeit') {
+      backendSortField = 'spieldatum'
     }
   }
+  
+  // Sende Sortierung direkt an das Backend
+  emit('sort-change', { 
+    sortBy: backendSortField, 
+    sortOrder: sortOrder 
+  })
 }
 
-const sr2 = (row) => {
-  const extra = row.sr2Besetzt === true ? "besetzt" : "offen"
-  const add = row.sr2Basar === true && row.sr2Besetzt === false ? "basar" : extra
-  const name = `<span class='${add}'>&nbsp;${text(add)}&nbsp;</span>`
-  return `${row.sr2}<br/> <i>${name}</i>`
-}
-
-const sr1 = (row) => {
-  const extra = row.sr1Besetzt === true ? "besetzt" : "offen"
-  const add = row.sr1Basar === true && row.sr1Besetzt === false ? "basar" : extra
-  const name = `<span class='${add}'>&nbsp;${text(add)}&nbsp;</span>`
-  return `${row.sr1}<br/> <i>${name}</i>`
+const onColumnFilter = (params) => {
+  emit('filter-change', params)
 }
 
 const columns = [
   {
     label: 'Datum',
-    field: 'kickoffDate',
-    type: 'date',
-    dateInputFormat: 'yyyy-MM-dd',
-    dateOutputFormat: 'dd.MM.yyyy',
+    field: 'datum',
     tdClass: 'text-center',
     thClass: 'text-center',
-    filterOptions: {
-      enabled: true,
-      filterDropdownItems: [],
-      filterFn: function (data, filterString) {
-        return format(new Date(data), "dd.MM.yyyy").includes(filterString)
-      },
-      trigger: 'keyup',
-    },
-  },
-  {
-    label: 'Halle',
-    field: 'spielfeld',
-    thClass: 'text-center',
-    filterOptions: {
-      enabled: true,
-    },
-    tdClass: 'text-center'
-  },
-  {
-    label: 'Liga',
-    field: 'liganame',
-    thClass: 'text-center',
-    filterOptions: {
-      enabled: true,
-    },
-    tdClass: 'text-center'
+    sortable: true,
+    sortField: 'spieldatum', // Backend-Feld für Sortierung
   },
   {
     label: 'Zeit',
-    field: 'kickoffTime',
-    type: 'date',
+    field: 'zeit',
     tdClass: 'text-center',
     thClass: 'text-center',
-    dateInputFormat: 'HH:mm',
-    dateOutputFormat: 'HH:mm',
-    filterOptions: {
-      enabled: true,
-    },
+    sortable: true,
+    sortField: 'spieldatum', // Backend-Feld für Sortierung
   },
   {
-    label: 'Heim',
-    field: 'homeTeam',
+    label: 'Spielfeld',
+    field: 'spielfeldName',
+    thClass: 'text-center',
+    tdClass: 'text-center',
+    sortable: true,
+  },
+  {
+    label: 'Heimteam',
+    field: 'heimMannschaftName',
     type: 'text',
     tdClass: 'text-center',
     thClass: 'text-center',
-    filterOptions: {
-      enabled: true,
-    },
+    sortable: true,
   },
   {
-    label: 'Gast',
-    field: 'guestTeam',
+    label: 'Gastteam',
+    field: 'gastMannschaftName',
     type: 'text',
     tdClass: 'text-center',
     thClass: 'text-center',
-    filterOptions: {
-      enabled: true,
-    },
+    sortable: true,
   },
   {
-    label: '1.SR',
-    name: "sr1",
-    field: sr1,
+    label: 'SR Verein 1',
+    field: 'sr1VereinName',
+    tdClass: 'text-center',
+    thClass: 'text-center',
+    sortable: true,
+  },
+  {
+    label: 'SR Verein 2',
+    field: 'sr2VereinName',
+    tdClass: 'text-center',
+    thClass: 'text-center',
+    sortable: true,
+  },
+  {
+    label: 'SR Qualifikation',
+    field: 'srQualifikation.bezeichnung',
+    tdClass: 'text-center',
+    thClass: 'text-center',
+    sortable: false, // Komplexe Felder können nicht sortiert werden
+  },
+  {
+    label: 'Aktion',
+    field: 'id',
+    tdClass: 'text-center',
+    thClass: 'text-center',
+    sortable: false,
     html: true,
-    type: 'text',
-    tdClass: (row) => {
-      const extra = row.sr1Besetzt === true ? "besetzt" : "offen"
-      const add = row.sr1Basar === true && row.sr1Besetzt === false ? "basar" : extra
-      return 'text-center' + " " + add + " otherClub"
-    },
-    thClass: 'text-center',
-    filterOptions: {
-      enabled: true,
-    },
-  },
-  {
-    label: '2.SR',
-    name: "sr2",
-    field: sr2,
-    html: true,
-    type: 'text',
-    tdClass: (row) => {
-      const extra = row.sr2Besetzt === true ? "besetzt" : "offen"
-      const add = row.sr2Basar === true && row.sr2Besetzt === false ? "basar" : extra
-      return 'text-center' + " " + add + " otherClub"
-    },
-    thClass: 'text-center',
-    filterOptions: {
-      enabled: true,
-    },
-  },
-  {
-    label: 'Lizenz',
-    field: fieldFn,
-    tdClass: 'text-center',
-    filterOptions: {
-      enabled: true,
-      filterDropdownItems: ["LSE", "LSE+ | LSD", "LSD"],
-    },
   },
 ]
 
-onMounted(async () => {
-  games.value = await GamesService.basar()
-  games.value = games.value.filter((game) => {
-    return (Math.floor(new Date() / 1000) - Math.floor(new Date(game.kickoffDate) / 1000)) < 86400
-  })
-  
-  const contact = JSON.parse(localStorage.getItem('contact'))
-  if (contact) {
-    contactName.value = contact.name
-    contactEmail.value = contact.email
-    contactMobile.value = contact.mobile
-    contactLizenz.value = contact.lizenz
-    contactSaveInfo.value = contact.saveInfo
+// Datum für Anzeige formatieren
+const formatDateForDisplay = (timestamp) => {
+  if (!timestamp) return 'N/A'
+  try {
+    const date = new Date(parseInt(timestamp))
+    return date.toLocaleDateString('de-DE', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    })
+  } catch (error) {
+    return 'N/A'
+  }
+}
+
+// Watch für Filter-Änderungen
+watch(() => localFilters.value.spieldatum, (newVal) => {
+  if (newVal) {
+    const timestamp = newVal.getTime().toString()
+    emit('filter-change', { spieldatum: timestamp })
+  } else {
+    emit('filter-change', { spieldatum: '' })
   }
 })
 
-watch(contactName, () => {
-  updateLocal()
+watch(() => localFilters.value.spielfeldName, (newVal) => {
+  emit('filter-change', { spielfeldName: newVal?.value || newVal })
 })
 
-watch(contactLizenz, () => {
-  updateLocal()
-})
-
-watch(contactEmail, () => {
-  updateLocal()
-})
-
-watch(contactMobile, () => {
-  updateLocal()
-})
-
-watch(contactSaveInfo, () => {
-  updateLocal()
+watch(() => localFilters.value.ligaName, (newVal) => {
+  emit('filter-change', { ligaName: newVal?.value || newVal })
 })
 </script>
 
-<style>
-.btn-close {
-  background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat !important;
+<style scoped>
+/* Vue Multiselect Styling */
+:deep(.multiselect) {
+  min-height: 38px;
+  background: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.multiselect-dropdown) {
+  border: none;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: white;
+  margin-top: 2px;
+}
+
+:deep(.multiselect-option) {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+:deep(.multiselect-option:last-child) {
+  border-bottom: none;
+}
+
+:deep(.multiselect-option:hover) {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+:deep(.multiselect-option.is-selected) {
+  background: #667eea;
+  color: white;
+}
+
+:deep(.multiselect-input) {
+  border: none;
+  padding: 0.5rem;
+  background: transparent;
+  color: #495057;
+}
+
+:deep(.multiselect-input::placeholder) {
+  color: #6c757d;
+}
+
+:deep(.multiselect-tags) {
+  padding: 0.25rem 0.5rem;
+}
+
+:deep(.multiselect-tag) {
+  background: #667eea;
+  color: white;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  margin: 0.125rem;
+  font-size: 0.875rem;
+}
+
+:deep(.multiselect-tag-remove) {
+  color: white;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+:deep(.multiselect-tag-remove:hover) {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+:deep(.multiselect-placeholder) {
+  color: #6c757d;
+  padding: 0.5rem;
+}
+
+:deep(.multiselect-single-label) {
+  color: #495057;
+  padding: 0.5rem;
+}
+
+:deep(.multiselect-caret) {
+  border-top: 5px solid #6c757d;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  margin-top: 0.5rem;
+}
+
+:deep(.multiselect-caret.is-open) {
+  border-top: none;
+  border-bottom: 5px solid #6c757d;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+/* Vue Datepicker Styling */
+:deep(.dp__main) {
+  font-family: inherit;
+}
+
+:deep(.dp__input) {
+  border: none;
+  border-radius: 0.375rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  background: white;
+  color: #495057;
+  min-height: 38px;
+  width: 100%;
+}
+
+:deep(.dp__input::placeholder) {
+  color: #6c757d;
+}
+
+:deep(.dp__input:focus) {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+}
+
+:deep(.dp__menu) {
+  border: none;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: white;
+  margin-top: 2px;
+}
+
+:deep(.dp__calendar_header) {
+  background: #667eea;
+  color: white;
+  border-radius: 0.375rem 0.375rem 0 0;
+}
+
+:deep(.dp__calendar_header_cell) {
+  color: white;
+  font-weight: 600;
+}
+
+:deep(.dp__calendar_header_cell--clickable:hover) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+:deep(.dp__cell_inner) {
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+:deep(.dp__cell_inner:hover) {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+:deep(.dp__active_date) {
+  background: #667eea;
+  color: white;
+}
+
+:deep(.dp__active_date:hover) {
+  background: #5a6fd8;
+}
+
+:deep(.dp__today) {
+  border: 2px solid #667eea;
+  color: black;
+}
+
+:deep(.dp__today:hover) {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+:deep(.dp__arrow_bottom) {
+  border-top: 5px solid #6c757d;
+}
+
+:deep(.dp__arrow_top) {
+  border-bottom: 5px solid #6c757d;
+}
+
+/* Datepicker Button Styling */
+.datepicker-trigger {
+  min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.datepicker-trigger:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.7);
+  transform: translateY(-1px);
+}
+
+.datepicker-trigger.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.filters-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.filters-header {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.filters-header:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.filters-header h5 {
+  color: white;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filters-content {
+  padding: 1.5rem;
+  color: white;
+}
+
+.filters-content .form-label {
+  color: white;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.filters-content .form-control {
+  border: none;
+  border-radius: 0.375rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 38px;
+  padding: 0.5rem;
+  background: white;
+  color: #495057;
+  transition: all 0.3s ease;
+}
+
+.filters-content .form-control:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+  transform: translateY(-1px);
+}
+
+.filters-content .form-control::placeholder {
+  color: #6c757d;
+}
+
+.filters-content .input-group-text {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  color: #667eea;
+  border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.filters-content .btn-outline-secondary {
+  border-color: rgba(255, 255, 255, 0.5);
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.filters-content .btn-outline-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.7);
+  transform: translateY(-1px);
+}
+
+/* Vue Good Table Anpassungen */
+:deep(.vgt-table) {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.vgt-table thead th) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 1rem 0.75rem;
+  font-weight: 600;
+}
+
+:deep(.vgt-table thead th.sortable) {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+:deep(.vgt-table thead th.sortable:hover) {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-1px);
+}
+
+:deep(.vgt-table thead th.sort-asc::after) {
+  content: '↑';
+  opacity: 1;
+}
+
+:deep(.vgt-table thead th.sort-desc::after) {
+  content: '↓';
+  opacity: 1;
+}
+
+:deep(.vgt-table tbody tr) {
+  transition: all 0.3s ease;
+}
+
+:deep(.vgt-table tbody tr:hover) {
+  background: rgba(102, 126, 234, 0.1);
+  transform: translateX(2px);
+}
+
+:deep(.vgt-table tbody td) {
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.1);
 }
 </style>

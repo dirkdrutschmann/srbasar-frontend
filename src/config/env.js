@@ -1,51 +1,28 @@
- // Environment Configuration
+// Environment Configuration
 export const config = {
-    // API URLs
-    api: {
-      baseUrl: import.meta.env.VITE_API_BASE_URL,
-      auth: import.meta.env.VITE_API_AUTH_URL,
-      ref: import.meta.env.VITE_API_REF_URL,
-      update: import.meta.env.VITE_API_UPDATE_URL,
-      link: import.meta.env.VITE_API_LINK_URL,
-      user: import.meta.env.VITE_API_USER_URL
-    },
+  // API URLs
+  api: {
+    baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/v1',
+  },
+
+  github: {
+    frontend: import.meta.env.VITE_GITHUB_FRONTEND_URL,
+    backend: import.meta.env.VITE_GITHUB_BACKEND_URL
+  },
   
-    github: {
-      frontend: import.meta.env.VITE_GITHUB_FRONTEND_URL,
-      backend: import.meta.env.VITE_GITHUB_BACKEND_URL }
-      ,
-    // App Configuration
-    app: {
-      title: import.meta.env.VITE_APP_TITLE,
-      version: import.meta.env.VITE_APP_VERSION,
-      description: import.meta.env.VITE_APP_DESCRIPTION
-    }
+  // App Configuration
+  app: {
+    title: import.meta.env.VITE_APP_TITLE || 'SR Basar',
+    version: import.meta.env.VITE_APP_VERSION || '2.0.0',
+    description: import.meta.env.VITE_APP_DESCRIPTION || 'Schiedsrichter Basar System'
   }
-  
-  // Helper functions
-  export const getApiUrl = (endpoint) => {
-    console.log(config.api.baseUrl)
-    return `${config.api.baseUrl}/${endpoint}`
-  }
-  
-  export const getAuthUrl = (endpoint) => {
-    return `${config.api.auth}/${endpoint}`
-  }
-  
-  export const getRefUrl = (endpoint) => {
-    return `${config.api.ref}/${endpoint}`
-  }
-  
-  export const getUpdateUrl = (endpoint) => {
-    return `${config.api.update}/${endpoint}`
-  }
-  
-  export const getLinkUrl = (endpoint) => {
-    return `${config.api.link}/${endpoint}`
-  }
-  
-  export const getUserUrl = (endpoint) => {
-    return `${config.api.user}/${endpoint}`
-  }
-  
-  export default config
+}
+
+// Helper functions
+export const getApiUrl = (endpoint = '') => {
+  const baseUrl = config.api.baseUrl.replace(/\/$/, '')
+  const cleanEndpoint = endpoint.replace(/^\//, '')
+  return cleanEndpoint ? `${baseUrl}/${cleanEndpoint}` : baseUrl
+}
+
+export default config

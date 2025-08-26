@@ -9,18 +9,18 @@
         
         <form @submit.prevent="handleLogin">
           <div class="mb-3">
-            <label for="email" class="form-label">E-Mail</label>
+            <label for="username" class="form-label">Benutzername oder E-Mail</label>
             <input
-              id="email"
-              v-model="user.email"
-              type="email"
+              id="username"
+              v-model="user.username"
+              type="text"
               class="form-control"
-              placeholder="ihre.email@beispiel.de"
+              placeholder="Benutzername oder E-Mail-Adresse"
               required
-              :class="{ 'is-invalid': errors.email }"
+              :class="{ 'is-invalid': errors.username }"
             />
-            <div v-if="errors.email" class="invalid-feedback">
-              {{ errors.email }}
+            <div v-if="errors.username" class="invalid-feedback">
+              {{ errors.username }}
             </div>
           </div>
           
@@ -77,12 +77,12 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const user = ref({
-  email: '',
+  username: '',
   password: ''
 })
 
 const errors = ref({
-  email: '',
+  username: '',
   password: ''
 })
 
@@ -98,11 +98,11 @@ onMounted(() => {
 })
 
 const validateForm = () => {
-  errors.value.email = ''
+  errors.value.username = ''
   errors.value.password = ''
   
-  if (!user.value.email) {
-    errors.value.email = 'E-Mail ist erforderlich'
+  if (!user.value.username) {
+    errors.value.username = 'Benutzername oder E-Mail ist erforderlich'
     return false
   }
   

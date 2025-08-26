@@ -1,5 +1,5 @@
 {
-  "name": "spielebasar_frontend",
+  "name": "srbasar_frontend",
   "version": "2.0.0",
   "private": true,
   "type": "module",
@@ -16,22 +16,16 @@
     "@fortawesome/free-solid-svg-icons": "^7.0.0",
     "@fortawesome/vue-fontawesome": "^3.1.1",
     "@popperjs/core": "^2.11.8",
+    "@vuepic/vue-datepicker": "^11.0.2",
     "@vueuse/core": "^13.6.0",
     "axios": "^1.11.0",
     "bootstrap": "^5.3.7",
     "date-fns": "^4.1.0",
-    "jquery": "^3.7.1",
-    "libphonenumber-js": "^1.12.10",
-    "maz-ui": "^3.50.1",
     "pinia": "^3.0.3",
-    "tabulator-tables": "^6.3.1",
-    "uuid": "^11.1.0",
     "vue": "^3.5.18",
     "vue-good-table-next": "^0.2.2",
-    "vue-json-excel3": "^1.0.30",
-    "vue-multiselect": "^3.3.1",
-    "vue-router": "^4.5.1",
-    "vuex": "^4.1.0"
+    "vue-multiselect": "^3.0.0-beta.3",
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",

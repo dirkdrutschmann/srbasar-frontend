@@ -263,11 +263,10 @@
     <!-- Toast Messages -->
     <div 
       v-if="toastMessage" 
-      :class="toastClass"
       class="toast-container position-fixed top-0 end-0 p-3"
     >
       <div class="toast show" role="alert">
-        <div class="toast-header">
+        <div class="toast-header" :class="toastClass">
           <strong class="me-auto">{{ toastTitle }}</strong>
           <button 
             type="button" 
@@ -474,11 +473,30 @@ onMounted(() => {
 
 .table {
   margin-bottom: 0;
+  background: white !important;
 }
 
 .table th {
   border-top: none;
   font-weight: 600;
+  background: #f8f9fa !important;
+  color: #212529 !important;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.table td {
+  background: white !important;
+  color: #212529 !important;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+.table tbody tr:hover {
+  background: #f8f9fa !important;
+}
+
+.table tbody tr:hover td {
+  background: #f8f9fa !important;
 }
 
 .btn-group-sm .btn {
@@ -506,6 +524,27 @@ onMounted(() => {
 .toast {
   border-radius: 0.5rem;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  background: white !important;
+  border: 1px solid #dee2e6;
+}
+
+.toast-header {
+  background: white !important;
+  color: #212529 !important;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.toast-body {
+  background: white !important;
+  color: #212529 !important;
+}
+
+.toast.show .toast-header.text-success {
+  color: #198754 !important;
+}
+
+.toast.show .toast-header.text-danger {
+  color: #dc3545 !important;
 }
 
 .spinner-border-sm {

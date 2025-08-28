@@ -1,31 +1,39 @@
 <template>
-  <div class="mt-0">
+  <div class="mt-0 table-container">
     <!-- Collapsible Filter-Bereich -->
     <div class="filters-section mb-3">
       <div class="filters-header" @click="toggleFilters">
         <h5 class="mb-0">
           <font-awesome-icon icon="fa-solid fa-filter" class="me-2" />
           Filter anzeigen
-          <font-awesome-icon 
-            :icon="filtersCollapsed ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-up'" 
-            class="ms-2 chevron-icon" 
+          <font-awesome-icon
+            :icon="
+              filtersCollapsed
+                ? 'fa-solid fa-chevron-down'
+                : 'fa-solid fa-chevron-up'
+            "
+            class="ms-2 chevron-icon"
           />
         </h5>
         <!-- Badge für aktive Filter -->
-        <div v-if="hasActiveFilters" class="active-filters-badge" @click.stop="clearFilters">
+        <div
+          v-if="hasActiveFilters"
+          class="active-filters-badge"
+          @click.stop="clearFilters"
+        >
           <span class="badge-count">{{ activeFiltersCount }}</span>
           <span class="badge-text">Filter aktiv</span>
           <font-awesome-icon icon="fa-solid fa-times" class="ms-1" />
         </div>
       </div>
-      
+
       <div v-show="!filtersCollapsed" class="filters-content">
         <div class="row">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label class="form-label">Spielfeld</label>
             <Multiselect
               v-model="localFilters.spielfeldName"
-              :options="availableFilters.spielfeldName"
+              :options="availableFilters.spielfeldName || []"
               :searchable="true"
               :create-option="false"
               placeholder="Alle Spielfelder"
@@ -39,11 +47,11 @@
               class="custom-multiselect"
             />
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label class="form-label">Liga</label>
             <Multiselect
               v-model="localFilters.ligaName"
-              :options="availableFilters.ligaName"
+              :options="availableFilters.ligaName || []"
               :searchable="true"
               :create-option="false"
               placeholder="Alle Ligen"
@@ -57,15 +65,33 @@
               class="custom-multiselect"
             />
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
+            <label class="form-label">SR-Lizenz</label>
+            <Multiselect
+              v-model="localFilters.srLizenz"
+              :options="availableFilters.srLizenz || []"
+              :searchable="true"
+              :create-option="false"
+              placeholder="Alle Lizenzen"
+              noOptionsText="Liste ist leer"
+              noResultsText="Keine Ergebnisse gefunden"
+              searchPlaceholder="Suchen..."
+              selectLabel="Enter zum Auswählen"
+              deselectLabel="Enter zum Entfernen"
+              selectedLabel="Ausgewählt"
+              @change="applyFilters"
+              class="custom-multiselect"
+            />
+          </div>
+          <div class="col-md-3">
             <label class="form-label">Globale Suche</label>
             <div class="input-group">
               <span class="input-group-text">
                 <font-awesome-icon icon="fa-solid fa-magnifying-glass" />
               </span>
-              <input 
-                type="text" 
-                v-model="localFilters.search" 
+              <input
+                type="text"
+                v-model="localFilters.search"
                 class="form-control"
                 placeholder="Suche nach Team, Verein, Ort..."
                 @input="debounceSearch"
@@ -85,21 +111,27 @@
               :close-on-auto-apply="true"
               :teleport-to="'body'"
               :allowed-dates="availableDates"
-              teleport-center 
+              teleport-center
               class="custom-datepicker"
             >
             </Datepicker>
-            <button 
-                  type="button" 
-                  class="btn btn-outline-secondary btn-sm datepicker-trigger"
-                  :class="{ 'active': localFilters.spieldatum }"
-                  @click="toggleDatepicker"
-                >
-                  <font-awesome-icon icon="fa-solid fa-calendar" class="me-1" />
-                  {{ localFilters.spieldatum ? formatDateForDisplay(localFilters.spieldatum.getTime().toString()) : 'Datum auswählen' }}
-                </button>
-            <button 
-              @click="clearFilters" 
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm datepicker-trigger"
+              :class="{ active: localFilters.spieldatum }"
+              @click="toggleDatepicker"
+            >
+              <font-awesome-icon icon="fa-solid fa-calendar" class="me-1" />
+              {{
+                localFilters.spieldatum
+                  ? formatDateForDisplay(
+                      localFilters.spieldatum.getTime().toString()
+                    )
+                  : "Datum auswählen"
+              }}
+            </button>
+            <button
+              @click="clearFilters"
               class="btn btn-outline-secondary btn-sm"
               :disabled="loading"
             >
@@ -113,37 +145,38 @@
 
     <!-- Tabelle mit Server-Side-Modus -->
     <vue-good-table
-        ref="my-table"
-        mode="remote"
-        :columns="columns"
-        :rows="games"
-        :totalRows="pagination.totalItems"
-        :isLoading.sync="loading"
-        :pagination-options="{
-          enabled: true,
-          perPage: pagination.pageSize || 10,
-          perPageDropdown: [10, 20, 50, 100],
-          perPageDropdownEnabled: true,
-          nextLabel: 'Nächste',
-          prevLabel: 'Vorherige',
-          rowsPerPageLabel: 'Spiele pro Seite',
-          ofLabel: 'von',
-          pageLabel: 'Seite',
-          allLabel: 'Alle'
-        }"
-        theme="nocturnal"
-        :search-options="{
-          enabled: false // Server-seitige Suche
-        }"
-        :sort-options="{
-          enabled: true,
-          initialSortBy: { field: 'datum', type: 'asc' },
-          multiColumn: false
-        }"
-        @page-change="onPageChange"
-        @per-page-change="onPerPageChange"
-        @sort-change="onSortChange"
-        @column-filter="onColumnFilter"
+      ref="my-table"
+      mode="remote"
+      :columns="columns"
+      :rows="games"
+      :totalRows="pagination.totalItems"
+      :rowStyleClass="getRowClass"
+      :isLoading.sync="loading"
+      :pagination-options="{
+        enabled: true,
+        perPage: pagination.pageSize || 10,
+        perPageDropdown: [10, 20, 50, 100],
+        perPageDropdownEnabled: true,
+        nextLabel: 'Nächste',
+        prevLabel: 'Vorherige',
+        rowsPerPageLabel: 'Spiele pro Seite',
+        ofLabel: 'von',
+        pageLabel: 'Seite',
+        allLabel: 'Alle',
+      }"
+      theme="nocturnal"
+      :search-options="{
+        enabled: false, // Server-seitige Suche
+      }"
+      :sort-options="{
+        enabled: true,
+        initialSortBy: { field: 'datum', type: 'asc' },
+        multiColumn: false,
+      }"
+      @page-change="onPageChange"
+      @per-page-change="onPerPageChange"
+      @sort-change="onSortChange"
+      @column-filter="onColumnFilter"
     >
       <template #emptystate>
         <div class="text-center py-4">
@@ -151,7 +184,7 @@
           <p class="text-muted">Es sind keine Spiele im Basar vorhanden.</p>
         </div>
       </template>
-      
+
       <template #loadingContent>
         <div class="text-center py-4">
           <div class="spinner-border text-primary" role="status">
@@ -164,246 +197,359 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import Multiselect from 'vue-multiselect'
-import Datepicker from '@vuepic/vue-datepicker'
+import { ref, computed, watch } from "vue";
+import Multiselect from "vue-multiselect";
+import Datepicker from "@vuepic/vue-datepicker";
 
-const datepicker = ref(null)
+const datepicker = ref(null);
 const toggleDatepicker = () => {
-  datepicker.value.toggleMenu()
-}
+  datepicker.value.toggleMenu();
+};
 const props = defineProps({
   games: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   pagination: {
     type: Object,
-    default: () => ({})
+    default: () => ({}),
   },
   availableFilters: {
     type: Object,
-    default: () => ({})
+    default: () => ({}),
   },
   loading: {
     type: Boolean,
-    default: false
+    default: false,
   },
   availableDates: {
     type: Array,
-    default: () => []
-  }
-})
+    default: () => [],
+  },
+});
 
-const emit = defineEmits(['page-change', 'filter-change', 'sort-change', 'search-change', 'per-page-change'])
+const getRowClass = (row) => {
+  let classes = [];
+
+  if (row.sr1) {
+    classes.push("sr1-true");
+  } else {
+    if (row.sr1OffenAngeboten) {
+      classes.push("sr1-offenAngeboten");
+    }
+  }
+  if (row.sr2) {
+    classes.push("sr2-true");
+  } else {
+    if (row.sr2OffenAngeboten) {
+      classes.push("sr2-offenAngeboten");
+    }
+  }
+  if (row.sr3) {
+    classes.push("sr3-true");
+  } else {
+    if (row.sr3OffenAngeboten) {
+      classes.push("sr3-offenAngeboten");
+    }
+  }
+
+  return classes.join(" ");
+};
+
+const emit = defineEmits([
+  "page-change",
+  "filter-change",
+  "sort-change",
+  "search-change",
+  "per-page-change",
+]);
 
 // Collapsible Filter
-const filtersCollapsed = ref(true)
+const filtersCollapsed = ref(true);
 
 // Lokale Filter
 const localFilters = ref({
   spieldatum: null,
-  ligaName: '',
-  spielfeldName: '',
-  search: ''
-})
+  ligaName: "",
+  spielfeldName: "",
+  srLizenz: "",
+  search: "",
+});
 
 // Verfügbare Datums für den Datepicker
 const availableDates = computed(() => {
-  if (!props.availableFilters.spieldatum) return []
-  
-  return props.availableFilters.spieldatum.map(timestamp => {
-    const date = new Date(parseInt(timestamp))
-    return date
-  })
-})
+  if (!props.availableFilters?.spieldatum) return [];
+
+  return props.availableFilters.spieldatum.map((timestamp) => {
+    const date = new Date(parseInt(timestamp));
+    return date;
+  });
+});
 
 // Überprüfe ob aktive Filter vorhanden sind
 const hasActiveFilters = computed(() => {
-  return localFilters.value.spieldatum || 
-         localFilters.value.ligaName || 
-         localFilters.value.spielfeldName || 
-         localFilters.value.search
-})
+  return (
+    localFilters.value.spieldatum ||
+    localFilters.value.ligaName ||
+    localFilters.value.spielfeldName ||
+    localFilters.value.srLizenz ||
+    localFilters.value.search
+  );
+});
 
 // Zähle aktive Filter
 const activeFiltersCount = computed(() => {
-  let count = 0
-  if (localFilters.value.spieldatum) count++
-  if (localFilters.value.ligaName) count++
-  if (localFilters.value.spielfeldName) count++
-  if (localFilters.value.search) count++
-  return count
-})
+  let count = 0;
+  if (localFilters.value.spieldatum) count++;
+  if (localFilters.value.ligaName) count++;
+  if (localFilters.value.spielfeldName) count++;
+  if (localFilters.value.srLizenz) count++;
+  if (localFilters.value.search) count++;
+  return count;
+});
 
 // Filter ein-/ausklappen
 const toggleFilters = () => {
-  filtersCollapsed.value = !filtersCollapsed.value
-}
+  filtersCollapsed.value = !filtersCollapsed.value;
+};
 
 // Debounce für Suche
-let searchTimeout = null
+let searchTimeout = null;
 const debounceSearch = () => {
-  clearTimeout(searchTimeout)
+  clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
-    applyFilters()
-  }, 500)
-}
+    applyFilters();
+  }, 500);
+};
 
 // Filter anwenden
 const applyFilters = () => {
-  emit('filter-change', { ...localFilters.value })
-}
+  emit("filter-change", { ...localFilters.value });
+};
 
 // Filter zurücksetzen
 const clearFilters = () => {
   localFilters.value = {
     spieldatum: null,
-    ligaName: '',
-    spielfeldName: '',
-    search: ''
-  }
-  
-  applyFilters()
-}
+    ligaName: "",
+    spielfeldName: "",
+    srLizenz: "",
+    search: "",
+  };
 
-
+  applyFilters();
+};
 
 // Event-Handler für Remote-Modus
 const onPageChange = (params) => {
-  emit('page-change', params.currentPage)
-}
+  emit("page-change", params.currentPage);
+};
 
 const onPerPageChange = (params) => {
-  emit('per-page-change', params.currentPerPage)
-}
+  emit("per-page-change", params.currentPerPage);
+};
 
 const onSortChange = (params) => {
-  console.log('Sortierung empfangen:', params)
-  if(Array.isArray(params)) {
-    params = params[0]
+  console.log("Sortierung empfangen:", params);
+  if (Array.isArray(params)) {
+    params = params[0];
   }
-  const { field, type } = params
-  emit('sort-change', { 
-    sortBy: field, 
-    sortOrder: type 
-  })
-}
+  const { field, type } = params;
+  emit("sort-change", {
+    sortBy: field,
+    sortOrder: type,
+  });
+};
 
 const onColumnFilter = (params) => {
-  emit('filter-change', params)
-}
+  emit("filter-change", params);
+};
 
 const columns = [
   {
-    label: 'Datum',
-    field: 'datum',
-    tdClass: 'text-center',
-    thClass: 'text-center',
+    label: "Datum",
+    field: "datum",
+    tdClass: "text-center",
+    thClass: "text-center",
     sortable: true,
-    sortField: 'spieldatum',
+    sortField: "spieldatum",
   },
   {
-    label: 'Zeit',
-    field: 'zeit',
-    tdClass: 'text-center',
-    thClass: 'text-center',
+    label: "Zeit",
+    field: "zeit",
+    tdClass: "text-center",
+    thClass: "text-center",
     sortable: false,
   },
   {
-    label: 'Spielfeld',
-    field: 'spielfeldName',
-    thClass: 'text-center',
-    tdClass: 'text-center',
+    label: "Spielfeld",
+    field: "spielfeldName",
+    thClass: "text-center",
+    tdClass: "text-center",
     sortable: true,
-    sortField: 'spielfeldName',
+    sortField: "spielfeldName",
   },
   {
-    label: 'Heimteam',
-    field: 'heimMannschaftName',
-    type: 'text',
-    tdClass: 'text-center',
-    thClass: 'text-center',
+    label: "Heimteam",
+    field: "heimMannschaftName",
+    type: "text",
+    tdClass: "text-center",
+    thClass: "text-center",
     sortable: true,
-    sortField: 'heimMannschaftName',
+    sortField: "heimMannschaftName",
   },
   {
-    label: 'Gastteam',
-    field: 'gastMannschaftName',
-    type: 'text',
-    tdClass: 'text-center',
-    thClass: 'text-center',
+    label: "Gastteam",
+    field: "gastMannschaftName",
+    type: "text",
+    tdClass: "text-center",
+    thClass: "text-center",
     sortable: true,
-    sortField: 'gastMannschaftName',
+    sortField: "gastMannschaftName",
   },
   {
-    label: 'SR Verein 1',
-    field: 'sr1VereinName',
-    tdClass: 'text-center',
-    thClass: 'text-center',
+    label: "Liga",
+    field: "ligaName",
+    tdClass: "text-center",
+    thClass: "text-center",
     sortable: true,
-    sortField: 'sr1VereinName',
+    sortField: "ligaName",
   },
   {
-    label: 'SR Verein 2',
-    field: 'sr2VereinName',
-    tdClass: 'text-center',
-    thClass: 'text-center',
+    label: "SR-Lizenz",
+    field: "srLizenz",
+    tdClass: "text-center license-cell",
+    thClass: "text-center",
     sortable: true,
-    sortField: 'sr2VereinName',
+    sortField: "srLizenz",
   },
   {
-    label: 'SR Qualifikation',
-    field: 'srQualifikation.bezeichnung',
-    tdClass: 'text-center',
-    thClass: 'text-center',
-    sortable: false,
+    label: "SR Verein 1",
+    field: "sr1VereinName",
+    tdClass: "text-center sr1-cell",
+    thClass: "text-center",
+    sortable: true,
+    sortField: "sr1VereinName",
   },
   {
-    label: 'Aktion',
-    field: 'id',
-    tdClass: 'text-center',
-    thClass: 'text-center',
+    label: "SR Verein 2",
+    field: "sr2VereinName",
+    tdClass: "text-center sr2-cell",
+    thClass: "text-center",
+    sortable: true,
+    sortField: "sr2VereinName",
+  },
+  {
+    label: "Aktion",
+    field: "id",
+    tdClass: "text-center",
+    thClass: "text-center",
     sortable: false,
     html: true,
   },
-]
+];
 
 // Datum für Anzeige formatieren
 const formatDateForDisplay = (timestamp) => {
-  if (!timestamp) return 'N/A'
+  if (!timestamp) return "N/A";
   try {
-    const date = new Date(parseInt(timestamp))
-    return date.toLocaleDateString('de-DE', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    })
+    const date = new Date(parseInt(timestamp));
+    return date.toLocaleDateString("de-DE", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
   } catch (error) {
-    return 'N/A'
+    return "N/A";
   }
-}
+};
 
 // Watch für Filter-Änderungen
-watch(() => localFilters.value.spieldatum, (newVal) => {
-  if (newVal) {
-    const timestamp = newVal.getTime().toString()
-    emit('filter-change', { spieldatum: timestamp })
-  } else {
-    emit('filter-change', { spieldatum: '' })
+watch(
+  () => localFilters.value.spieldatum,
+  (newVal) => {
+    if (newVal) {
+      const timestamp = newVal.getTime().toString();
+      emit("filter-change", { spieldatum: timestamp });
+    } else {
+      emit("filter-change", { spieldatum: "" });
+    }
   }
-})
+);
 
-watch(() => localFilters.value.spielfeldName, (newVal) => {
-  emit('filter-change', { spielfeldName: newVal?.value || newVal })
-})
+watch(
+  () => localFilters.value.spielfeldName,
+  (newVal) => {
+    emit("filter-change", { spielfeldName: newVal?.value || newVal });
+  }
+);
 
-watch(() => localFilters.value.ligaName, (newVal) => {
-  emit('filter-change', { ligaName: newVal?.value || newVal })
-})
+watch(
+  () => localFilters.value.ligaName,
+  (newVal) => {
+    emit("filter-change", { ligaName: newVal?.value || newVal });
+  }
+);
+
+watch(
+  () => localFilters.value.srLizenz,
+  (newVal) => {
+    emit("filter-change", { srLizenz: newVal?.value || newVal });
+  }
+);
 </script>
 
 <style scoped>
+:deep(.vgt-table) {
+  --red: #dc35455b;
+  --green: #1987545b;
+}
+
+:deep(.btn-primary) {
+  --bs-btn-color: #fff;
+--bs-btn-bg: #764ba2;
+--bs-btn-border-color: #764ba2;
+
+--bs-btn-hover-color: #fff;
+--bs-btn-hover-bg: #6a4392;       /* slightly darker purple */
+--bs-btn-hover-border-color: #643f89;
+
+--bs-btn-focus-shadow-rgb: 118, 75, 162; /* rgb of #764ba2 */
+
+--bs-btn-active-color: #fff;
+--bs-btn-active-bg: #5c3a7d;      /* deeper purple */
+--bs-btn-active-border-color: #553573;
+--bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+
+--bs-btn-disabled-color: #fff;
+--bs-btn-disabled-bg: #a98acb;    /* lighter desaturated purple */
+--bs-btn-disabled-border-color: #a98acb;
+}
+
+:deep(.sr1-true .sr1-cell) {
+  background-color: var(--green);
+}
+
+:deep(.sr1-offenAngeboten .sr1-cell) {
+  background-color: var(--red);
+}
+
+:deep(.sr2-true .sr2-cell) {
+  background-color: var(--green);
+}
+
+:deep(.sr2-offenAngeboten .sr2-cell) {
+  background-color: var(--red);
+}
+
+:deep(.sr3-true .sr3-cell) {
+  background-color: var(--green);
+}
+
+:deep(.sr3-offenAngeboten .sr3-cell) {
+  background-color: var(--red);
+}
+
 /* Vue Multiselect Styling */
 :deep(.multiselect) {
   min-height: 38px;
@@ -585,7 +731,7 @@ watch(() => localFilters.value.ligaName, (newVal) => {
 :deep(.custom-datepicker .dp__input_icons),
 :deep(.custom-datepicker .dp__input_icon),
 :deep(.custom-datepicker .dp__input_wrap) {
-  display:none !important;
+  display: none !important;
 }
 /* Datepicker Button Styling */
 .datepicker-trigger {
@@ -768,12 +914,12 @@ watch(() => localFilters.value.ligaName, (newVal) => {
 }
 
 :deep(.vgt-table thead th.sort-asc::after) {
-  content: '↑';
+  content: "↑";
   opacity: 1;
 }
 
 :deep(.vgt-table thead th.sort-desc::after) {
-  content: '↓';
+  content: "↓";
   opacity: 1;
 }
 
@@ -789,5 +935,26 @@ watch(() => localFilters.value.ligaName, (newVal) => {
 :deep(.vgt-table tbody td) {
   padding: 0.75rem;
   border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+/* SR-Lizenz Styling */
+:deep(.license-cell) {
+  font-weight: 600;
+  color: #495057;
+}
+
+:deep(.license-cell:contains("LSE+")) {
+  color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+}
+
+:deep(.license-cell:contains("LSD")) {
+  color: #fd7e14;
+  background: rgba(253, 126, 20, 0.1);
+}
+
+:deep(.license-cell:contains("LSE")) {
+  color: #198754;
+  background: rgba(25, 135, 84, 0.1);
 }
 </style>

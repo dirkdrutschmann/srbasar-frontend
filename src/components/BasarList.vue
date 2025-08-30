@@ -350,7 +350,6 @@ const onPerPageChange = (params) => {
 };
 
 const onSortChange = (params) => {
-  console.log("Sortierung empfangen:", params);
   if (Array.isArray(params)) {
     params = params[0];
   }

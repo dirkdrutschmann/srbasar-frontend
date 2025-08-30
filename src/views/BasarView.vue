@@ -77,7 +77,6 @@ const processedGames = computed(() => {
 
 const updateParams = (newProps) => {
   serverParams.value = Object.assign({}, serverParams.value, newProps)
-  console.log('Server-Parameter aktualisiert:', serverParams.value)
 }
 
 const loadGames = async () => {
@@ -99,7 +98,6 @@ const loadGames = async () => {
       availableFilters.value = res.data.availableFilters || {}
     }
   } catch (error) {
-    console.error('Fehler beim Laden der Spiele:', error)
     games.value = []
   } finally {
     loading.value = false
@@ -121,7 +119,6 @@ const handleFilterChange = (filters) => {
 
 const handleSortChange = (sort) => {
   if (!sort.sortBy || !sort.sortOrder) {
-    console.warn('Ungültige Sortierung in BasarView:', sort)
     return
   }
   updateParams({

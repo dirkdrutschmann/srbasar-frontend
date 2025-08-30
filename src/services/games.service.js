@@ -6,7 +6,6 @@ class GamesService {
       const response = await apiClient.get('/spiele', { params })
       return response.data
     } catch (error) {
-      console.error('Fehler beim Laden der Spiele:', error)
       return []
     }
   }

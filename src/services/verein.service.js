@@ -6,7 +6,6 @@ class VereinService {
       const response = await apiClient.get('/vereine', { params })
       return response.data?.data?.vereine || []
     } catch (error) {
-      console.error('Fehler beim Laden der Vereine:', error)
       return []
     }
   }
@@ -18,7 +17,6 @@ class VereinService {
       })
       return response.data
     } catch (error) {
-      console.error('Fehler beim Aktualisieren des Vereins:', error)
       throw error
     }
   }

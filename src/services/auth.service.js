@@ -9,7 +9,6 @@ class AuthService {
       })
       return response.data
     } catch (error) {
-      console.error('Login-Fehler:', error)
       throw error
     }
   }
@@ -25,7 +24,6 @@ class AuthService {
       })
       return response.data
     } catch (error) {
-      console.error('Reset-Fehler:', error)
       return false
     }
   }
@@ -37,7 +35,6 @@ class AuthService {
       })
       return response.data
     } catch (error) {
-      console.error('Token-Validierungs-Fehler:', error)
       throw error
     }
   }
@@ -50,7 +47,6 @@ class AuthService {
       })
       return response.data
     } catch (error) {
-      console.error('Reset-Password-Fehler:', error)
       throw error
     }
   }

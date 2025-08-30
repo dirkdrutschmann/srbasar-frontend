@@ -132,7 +132,6 @@ const handleLogin = async () => {
     }
   } catch (error) {
     message.value = 'Ein Fehler ist aufgetreten'
-    console.error('Login error:', error)
   } finally {
     loading.value = false
   }

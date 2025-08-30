@@ -347,7 +347,6 @@
       users.value = response.data || []
     } catch (error) {
       showToast('Fehler beim Laden der Benutzer', 'error')
-      console.error('Fehler beim Laden der Benutzer:', error)
     } finally {
       loading.value = false
     }

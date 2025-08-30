@@ -6,7 +6,6 @@ class UserService {
       const response = await apiClient.get('/users/profile')
       return response.data?.data?.user || {}
     } catch (error) {
-      console.error('Fehler beim Laden des Profils:', error)
       throw error
     }
   }
@@ -16,7 +15,6 @@ class UserService {
       const response = await apiClient.put('/users/profile', userData)
       return response.data
     } catch (error) {
-      console.error('Fehler beim Aktualisieren des Profils:', error)
       throw error
     }
   }
@@ -29,7 +27,6 @@ class UserService {
       })
       return response.data
     } catch (error) {
-      console.error('Fehler beim Ändern des Passworts:', error)
       throw error
     }
   }

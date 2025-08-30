@@ -120,7 +120,6 @@ onMounted(async () => {
       username: profile.username || ''
     }
   } catch (error) {
-    console.error('Fehler beim Laden des Profils:', error)
   }
 })
 
@@ -132,7 +131,6 @@ const updateProfile = async () => {
     await authStore.setUser(profileForm.value)
     alert('Profil erfolgreich aktualisiert!')
   } catch (error) {
-    console.error('Fehler beim Aktualisieren des Profils:', error)
     alert('Fehler beim Aktualisieren des Profils')
   } finally {
     loading.value = false
@@ -161,7 +159,6 @@ const changePassword = async () => {
     
     alert('Passwort erfolgreich geändert!')
   } catch (error) {
-    console.error('Fehler beim Ändern des Passworts:', error)
     alert('Fehler beim Ändern des Passworts')
   } finally {
     passwordLoading.value = false

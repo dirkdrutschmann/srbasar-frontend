@@ -108,7 +108,6 @@ onMounted(async () => {
     const response = await VereinService.getVereine()
     vereine.value = response || []
   } catch (error) {
-    console.error('Fehler beim Laden der Vereine:', error)
     vereine.value = []
   }
 })
@@ -131,8 +130,6 @@ const updateHideLink = async (verein) => {
     }, 2000)
     
   } catch (error) {
-    console.error('Fehler beim Aktualisieren des Vereins:', error)
-    
     alert('Fehler beim Speichern der Änderung')
   } finally {
     updating.value = null

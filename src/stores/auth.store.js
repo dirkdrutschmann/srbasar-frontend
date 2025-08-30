@@ -48,7 +48,6 @@ export const useAuthStore = defineStore('auth', () => {
       }
       return { success: false, error: response.message || 'Login fehlgeschlagen' }
     } catch (error) {
-      console.error('Login error:', error)
       return { success: false, error: error.response?.data?.message || 'Login fehlgeschlagen' }
     }
   }
@@ -63,7 +62,6 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await AuthService.reset(email)
       return { success: true, data: response }
     } catch (error) {
-      console.error('Reset password error:', error)
       return { success: false, error: error.response?.data?.message || 'Passwort-Reset fehlgeschlagen' }
     }
   }

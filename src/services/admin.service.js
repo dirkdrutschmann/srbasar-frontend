@@ -10,7 +10,6 @@ class AdminService {
       const response = await apiClient.get('/admin/users')
       return response.data
     } catch (error) {
-      console.error('Fehler beim Abrufen der Benutzer:', error)
       throw error
     }
   }
@@ -24,7 +23,6 @@ class AdminService {
       const response = await apiClient.post('/admin/users', userData)
       return response.data
     } catch (error) {
-      console.error('Fehler beim Erstellen des Benutzers:', error)
       throw error
     }
   }
@@ -38,7 +36,6 @@ class AdminService {
       const response = await apiClient.delete(`/admin/users/${userId}`)
       return response.data
     } catch (error) {
-      console.error('Fehler beim Löschen des Benutzers:', error)
       throw error
     }
   }
@@ -53,7 +50,6 @@ class AdminService {
       const response = await apiClient.put(`/admin/users/${userId}/role`, { role })
       return response.data
     } catch (error) {
-      console.error('Fehler beim Aktualisieren der Benutzerrolle:', error)
       throw error
     }
   }

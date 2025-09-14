@@ -7,6 +7,18 @@
           <p class="text-muted">Melden Sie sich mit Ihren Zugangsdaten an</p>
         </div>
         
+        <div class="alert alert-info mb-4" role="alert">
+          <div class="d-flex align-items-start">
+            <font-awesome-icon icon="fa-solid fa-info-circle" class="me-2 mt-1" />
+            <div>
+              <strong>Wichtiger Hinweis:</strong><br>
+              Mit der Änderungen im DBB, verwalten Vereinschiedsrichterwarte ihre Spiele und deren Basar-Status ausschließlich über 
+              <a href="https://basketball-bund.net" target="_blank" class="alert-link">TeamSL</a>.<br><br></br>
+              <small>Dieser Login ist ausschließlich für Verantwortliche des Verbandes und bietet zudem keinerlei Möglichkeiten Spiele in den Basar zu verwalten.</small>
+            </div>
+          </div>
+        </div>
+        
         <form @submit.prevent="handleLogin">
           <div class="mb-3">
             <label for="username" class="form-label">Benutzername oder E-Mail</label>
@@ -199,6 +211,22 @@ const handleLogin = async () => {
   background: rgba(220, 53, 69, 0.1);
   border: 1px solid rgba(220, 53, 69, 0.3);
   color: #f8d7da;
+}
+
+.alert-info {
+  background: rgba(13, 202, 240, 0.1);
+  border: 1px solid rgba(13, 202, 240, 0.3);
+  color: #d1ecf1;
+}
+
+.alert-link {
+  color: #0dcaf0;
+  text-decoration: underline;
+}
+
+.alert-link:hover {
+  color: #0dcaf0;
+  text-decoration: none;
 }
 
 .text-decoration-none {

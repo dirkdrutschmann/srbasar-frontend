@@ -15,8 +15,8 @@
     <div class="row justify-content-center mt-3">
       <div class="col-12 col-lg-6">
         <div class="polling-controls">
-          <div class="d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center align-items-lg-center gap-3">
-            <div class="d-flex align-items-center">
+          <div class="d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center gap-3">
+            <div class="d-flex align-items-center min-height-40">
               <div class="form-check">
                 <input 
                   class="form-check-input" 
@@ -30,7 +30,7 @@
                 </label>
               </div>
             </div>
-            <div class="polling-status d-flex flex-column flex-sm-row align-items-center align-items-sm-center gap-2 gap-sm-3 mb-3">
+            <div class="polling-status d-flex flex-column flex-sm-row align-items-center justify-content-center gap-2 gap-sm-3 min-height-40">
               <div v-if="autoUpdateEnabled">
                 <span class="countdown-text">
                   Nächstes Update in: <strong>{{ countdown }}s</strong>
@@ -302,5 +302,39 @@ onUnmounted(() => {
 
 .countdown-text.text-muted {
   color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.min-height-40 {
+  min-height: 40px;
+}
+
+/* Scrollbar Styling für vgt-responsive */
+:deep(.vgt-responsive) {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+}
+
+:deep(.vgt-responsive)::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+:deep(.vgt-responsive)::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+:deep(.vgt-responsive)::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+:deep(.vgt-responsive)::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+:deep(.vgt-responsive)::-webkit-scrollbar-corner {
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>

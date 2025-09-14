@@ -49,6 +49,7 @@ const githubBackendUrl = import.meta.env.VITE_GITHUB_BACKEND_URL || 'https://git
   padding: 2rem 0;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
+  margin-top: auto;
 }
 
 .footer-links {

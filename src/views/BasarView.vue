@@ -11,11 +11,54 @@
       @search-change="handleSearchChange"
       @per-page-change="handlePerPageChange"
     />
+    
+    <div class="row justify-content-center mt-3">
+      <div class="col-12 col-lg-6">
+        <div class="polling-controls">
+          <div class="d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center align-items-lg-center gap-3">
+            <div class="d-flex align-items-center">
+              <div class="form-check">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  id="autoUpdateCheckbox"
+                  v-model="autoUpdateEnabled"
+                  @change="toggleAutoUpdate"
+                >
+                <label class="form-check-label" for="autoUpdateCheckbox">
+                  Automatisches Update
+                </label>
+              </div>
+            </div>
+            <div class="polling-status d-flex flex-column flex-sm-row align-items-center align-items-sm-center gap-2 gap-sm-3 mb-3">
+              <div v-if="autoUpdateEnabled">
+                <span class="countdown-text">
+                  Nächstes Update in: <strong>{{ countdown }}s</strong>
+                </span>
+              </div>
+              <div v-else>
+                <span class="countdown-text text-muted">
+                  Auto-Update pausiert
+                </span>
+              </div>
+              <button 
+                class="btn btn-outline-light btn-sm"
+                @click="manualUpdate"
+                :disabled="loading"
+              >
+                <font-awesome-icon icon="fa-solid fa-sync-alt" class="me-1" />
+                {{ loading ? 'Aktualisiere...' : '' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, h, createApp } from 'vue'
+import { ref, onMounted, onUnmounted, computed, h, createApp } from 'vue'
 import BasarList from "../components/BasarList.vue";
 import GamesService from "../services/games.service.js";
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -35,6 +78,11 @@ const availableFilters = ref({
   ligaName: [],
   spieldatum: []
 })
+
+const pollingInterval = ref(null)
+const countdownInterval = ref(null)
+const autoUpdateEnabled = ref(true)
+const countdown = ref(30)
 
 const serverParams = ref({
   columnFilters: {
@@ -146,6 +194,57 @@ const handleSearchChange = (searchTerm) => {
   loadGames()
 }
 
+const startCountdown = () => {
+  countdown.value = 30
+  countdownInterval.value = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      countdown.value = 30
+    }
+  }, 1000)
+}
+
+const stopCountdown = () => {
+  if (countdownInterval.value) {
+    clearInterval(countdownInterval.value)
+    countdownInterval.value = null
+  }
+}
+
+const startPolling = () => {
+  if (autoUpdateEnabled.value) {
+    // Polling alle 30 Sekunden
+    pollingInterval.value = setInterval(() => {
+      loadGames()
+    }, 30000)
+    startCountdown()
+  }
+}
+
+const stopPolling = () => {
+  if (pollingInterval.value) {
+    clearInterval(pollingInterval.value)
+    pollingInterval.value = null
+  }
+  stopCountdown()
+}
+
+const toggleAutoUpdate = () => {
+  if (autoUpdateEnabled.value) {
+    startPolling()
+  } else {
+    stopPolling()
+  }
+}
+
+const manualUpdate = async () => {
+  await loadGames()
+  // Countdown zurücksetzen wenn Auto-Update aktiv ist
+  if (autoUpdateEnabled.value) {
+    countdown.value = 30
+  }
+}
+
 onMounted(() => {
   serverParams.value = {
     columnFilters: {
@@ -163,5 +262,45 @@ onMounted(() => {
   }
   
   loadGames()
+  startPolling()
+})
+
+onUnmounted(() => {
+  stopPolling()
+  stopCountdown()
 })
 </script>
+
+<style scoped>
+.polling-controls {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.form-check-label {
+  color: white;
+  font-weight: 500;
+}
+
+.form-check-input:checked {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.form-check-input:checked:focus {
+  background-color: #28a745;
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.countdown-text {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+.countdown-text.text-muted {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+</style>

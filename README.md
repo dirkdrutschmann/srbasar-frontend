@@ -224,10 +224,10 @@ muss:
 ```bash
 npm version patch --no-git-tag-version
 git add package.json package-lock.json
-git commit -m "Release frontend v2.0.2"
+git commit -m "Release frontend v2.0.3"
 git push origin main
-git tag v2.0.2
-git push origin v2.0.2
+git tag v2.0.3
+git push origin v2.0.3
 ```
 
 Der Workflow baut das Frontend auf dem ISPConfig-Server mit der Datei

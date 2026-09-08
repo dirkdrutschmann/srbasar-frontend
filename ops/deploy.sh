@@ -14,7 +14,7 @@ if [[ ! -d "$SOURCE_DIR" ]]; then
   exit 66
 fi
 
-APP_ROOT="${SRBASAR_FRONTEND_ROOT:-/var/www/clients/client2/web3/web/.srbasar/frontend}"
+APP_ROOT="${SRBASAR_FRONTEND_ROOT:-/var/www/clients/client2/web3/private/frontend}"
 WEB_ROOT="${SRBASAR_FRONTEND_WEB_ROOT:-/var/www/clients/client2/web3/web}"
 CURRENT_LINK="$APP_ROOT/current"
 SHARED_DIR="$APP_ROOT/shared"

@@ -18,8 +18,8 @@ env:
   DEPLOY_HOST: mail.clubcircle.de
   DEPLOY_PORT: '22'
   DEPLOY_USER: root
-  FRONTEND_ROOT: /var/www/clients/client2/web3/web/.srbasar/frontend
-  FRONTEND_INCOMING: /var/www/clients/client2/web3/web/.srbasar/incoming/frontend
+  FRONTEND_ROOT: /var/www/clients/client2/web3/private/frontend
+  FRONTEND_INCOMING: /var/www/clients/client2/web3/private/.srbasar/incoming/frontend
 
 jobs:
   quality:

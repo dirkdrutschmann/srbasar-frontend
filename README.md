@@ -224,14 +224,14 @@ muss:
 ```bash
 npm version patch --no-git-tag-version
 git add package.json package-lock.json
-git commit -m "Release frontend v2.0.3"
+git commit -m "Release frontend v2.0.4"
 git push origin main
-git tag v2.0.3
-git push origin v2.0.3
+git tag v2.0.4
+git push origin v2.0.4
 ```
 
 Der Workflow baut das Frontend auf dem ISPConfig-Server mit der Datei
-`/var/www/clients/client2/web3/web/.srbasar/frontend/shared/.env`. Der fertige Build
+`/var/www/clients/client2/web3/private/frontend/shared/.env`. Der fertige Build
 landet in einem versionierten Release-Verzeichnis. Danach wird der ISPConfig-
 Webpfad `/var/www/clients/client2/web3/web` bleibt ISPConfig-kompatibel bestehen;
 Assets werden vor dem atomaren Wechsel der `index.html` bereitgestellt. Die

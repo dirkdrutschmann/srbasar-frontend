@@ -14,7 +14,7 @@ export const config = {
   app: {
     title: import.meta.env.VITE_APP_TITLE || 'SR Basar',
     version: import.meta.env.VITE_APP_VERSION || '2.0.0',
-    description: import.meta.env.VITE_APP_DESCRIPTION || 'Schiedsrichter Basar System'
+    description: import.meta.env.VITE_APP_DESCRIPTION || 'Spielebörse für Schiedsrichter: Vereine stellen offene Spiele ein, die direkt über Team-SL übernommen werden können.'
   }
 }
 

@@ -1,20 +1,28 @@
 <template>
-  <div id="app">
-    <AppHeader />
-    
-    <main class="main-content">
-      <div class="container-fluid">
-        <router-view />
-      </div>
-    </main>
-    
-    <AppFooter />
+  <div id="app" :class="{ 'app--design-mvp': isDesignMvp }">
+    <template v-if="isDesignMvp">
+      <router-view />
+    </template>
+
+    <template v-else>
+      <main class="main-content">
+        <div class="container-fluid">
+          <router-view />
+        </div>
+      </main>
+
+      <AppFooter />
+    </template>
   </div>
 </template>
 
 <script setup>
-import AppHeader from './components/layout/AppHeader.vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import AppFooter from './components/layout/AppFooter.vue'
+
+const route = useRoute()
+const isDesignMvp = computed(() => route.meta.layout === 'design-mvp')
 </script>
 
 <style scoped>
@@ -22,6 +30,10 @@ import AppFooter from './components/layout/AppFooter.vue'
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+#app.app--design-mvp {
+  display: block;
 }
 
 .main-content {

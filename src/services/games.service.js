@@ -9,6 +9,11 @@ class GamesService {
       return []
     }
   }
+
+  async getSpieleOrThrow(params = {}) {
+    const response = await apiClient.get('/spiele', { params })
+    return response.data
+  }
 }
 
 export default new GamesService();

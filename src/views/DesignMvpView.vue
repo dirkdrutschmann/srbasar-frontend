@@ -884,6 +884,7 @@ import {
   parseDistanceKm,
   requestUserLocation
 } from '@/services/geolocation.service.js'
+import { compareGamesByDateVenueTime } from '@/utils/gameSorting.js'
 
 const THEME_STORAGE_KEY = 'srbasar-design-mvp-theme'
 const DEFAULT_SORT_BY = 'date'
@@ -1155,16 +1156,14 @@ const filterDropdownMenuStyle = computed(() => ({
 }))
 
 function compareDateAndVenue(firstGame, secondGame) {
-  const dateDifference = new Date(firstGame.date).getTime() - new Date(secondGame.date).getTime()
-  if (dateDifference !== 0) return dateDifference
-
-  return String(firstGame.venue || '').localeCompare(String(secondGame.venue || ''), 'de-DE', {
-    numeric: true,
-    sensitivity: 'base'
-  })
+  return compareGamesByDateVenueTime(firstGame, secondGame)
 }
 
 function compareGames(firstGame, secondGame) {
+  if (sortBy.value === DEFAULT_SORT_BY) {
+    return compareGamesByDateVenueTime(firstGame, secondGame, sortDirection.value)
+  }
+
   let primaryDifference = 0
 
   if (sortBy.value === 'distance' && userLocation.value) {
@@ -1246,7 +1245,7 @@ const totalPages = computed(() => {
 })
 
 const visibleGames = computed(() => {
-  if (dataSourceMode.value === 'live') return liveGames.value
+  if (dataSourceMode.value === 'live') return [...liveGames.value].sort(compareGames)
 
   const startIndex = (currentPage.value - 1) * PAGE_SIZE
   return filteredGames.value.slice(startIndex, startIndex + PAGE_SIZE)

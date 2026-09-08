@@ -86,10 +86,12 @@ jobs:
         run: |
           set -euo pipefail
           archive="$FRONTEND_INCOMING/srbasar-frontend-${VERSION}.tar.gz"
-          ssh -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
+          ssh -p "$DEPLOY_PORT" -i "$HOME/.ssh/id_ed25519" \
+            -o IdentitiesOnly=yes -o BatchMode=yes "$DEPLOY_USER@$DEPLOY_HOST" \
             "install -d -m 700 '$FRONTEND_INCOMING'"
           git archive --format=tar.gz --prefix=source/ "$GITHUB_SHA" | \
-            ssh -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
+            ssh -p "$DEPLOY_PORT" -i "$HOME/.ssh/id_ed25519" \
+            -o IdentitiesOnly=yes -o BatchMode=yes "$DEPLOY_USER@$DEPLOY_HOST" \
             "tmp='$archive.tmp.$$'; cat > \"\$tmp\"; mv -f \"\$tmp\" '$archive'"
 
       - name: Activate release
@@ -100,5 +102,6 @@ jobs:
           set -euo pipefail
           archive="$FRONTEND_INCOMING/srbasar-frontend-${VERSION}.tar.gz"
           staging="$FRONTEND_ROOT/.incoming-${VERSION}-$$"
-          ssh -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
+          ssh -p "$DEPLOY_PORT" -i "$HOME/.ssh/id_ed25519" \
+            -o IdentitiesOnly=yes -o BatchMode=yes "$DEPLOY_USER@$DEPLOY_HOST" \
             "set -euo pipefail; mkdir -p '$staging'; tar --extract --gzip --file '$archive' --directory '$staging' --strip-components=1 --no-same-owner --no-same-permissions; bash '$staging/ops/deploy.sh' '$VERSION' '$staging'; rm -rf -- '$staging' '$archive'"

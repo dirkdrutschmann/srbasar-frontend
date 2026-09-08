@@ -82,14 +82,24 @@
                 v-for="quickFilter in visibleQuickFilters"
                 :key="quickFilter.id"
                 class="quick-filter"
-                :class="{ 'is-active': isQuickFilterActive(quickFilter.id), 'quick-filter--risk': quickFilter.id === 'atRisk' }"
+                :class="{
+                  'is-active': isQuickFilterActive(quickFilter.id),
+                  'quick-filter--risk': quickFilter.id === 'atRisk',
+                  'quick-filter--license': quickFilter.id === 'lse'
+                }"
                 :aria-pressed="isQuickFilterActive(quickFilter.id)"
                 type="button"
                 @click="toggleQuickFilter(quickFilter.id)"
               >
                 <font-awesome-icon :icon="quickFilter.icon" aria-hidden="true" />
                 {{ getQuickFilterLabel(quickFilter) }}
-                <span v-if="quickFilter.id === 'atRisk'" class="quick-filter-total">{{ atRiskCount }}</span>
+                <span
+                  v-if="quickFilter.id === 'atRisk' || quickFilter.id === 'lse'"
+                  class="quick-filter-total"
+                  :class="{ 'quick-filter-total--license': quickFilter.id === 'lse' }"
+                >
+                  {{ quickFilter.id === 'atRisk' ? atRiskCount : lseCount }}
+                </span>
               </button>
             </div>
 
@@ -896,6 +906,7 @@ const paypalSupportUrl = import.meta.env.VITE_PAYPAL_SUPPORT_URL || 'https://www
 const quickFilters = [
   { id: 'nearby', label: 'In deiner Nähe', icon: ['fas', 'location-dot'] },
   { id: 'weekend', label: 'Dieses Wochenende', icon: ['fas', 'calendar-days'] },
+  { id: 'lse', label: 'LSE', icon: ['fas', 'id-card'] },
   { id: 'atRisk', label: 'Ausfall bedroht', icon: ['fas', 'triangle-exclamation'] }
 ]
 
@@ -1089,9 +1100,20 @@ const atRiskCount = computed(() => dataSourceMode.value === 'live'
   ? Number(liveAvailableFilters.value.atRiskCount) || 0
   : mockGames.filter((game) => game.isAtRisk).length
 )
+const lseCount = computed(() => dataSourceMode.value === 'live'
+  ? Number(liveAvailableFilters.value.lseCount) || 0
+  : mockGames.filter((game) => game.license === 'LSE').length
+)
 const hasAtRiskGames = computed(() => atRiskCount.value > 0)
+const isLseFilterActive = computed(() => filters.license === 'LSE')
+const hasLseGames = computed(() => (
+  lseCount.value > 0
+  && (filters.license === defaultFilters.license || isLseFilterActive.value)
+))
 const visibleQuickFilters = computed(() => quickFilters.filter((filter) => (
-  filter.id !== 'atRisk' || hasAtRiskGames.value || filters.atRiskOnly
+  filter.id !== 'atRisk' && filter.id !== 'lse'
+    || (filter.id === 'atRisk' && (hasAtRiskGames.value || filters.atRiskOnly))
+    || (filter.id === 'lse' && (hasLseGames.value || isLseFilterActive.value))
 )))
 
 const filterOptions = computed(() => {
@@ -1540,7 +1562,11 @@ function getLiveQueryParams() {
   if (searchTerm) params.search = searchTerm
   if (filters.league !== defaultFilters.league) params.ligaName = filters.league
   if (filters.venue.length) params.spielfeldNames = filters.venue.join(',')
-  if (filters.license !== defaultFilters.license) params.srLizenz = filters.license
+  if (filters.license === 'LSE') {
+    params.srLizenzen = 'LSE'
+  } else if (filters.license !== defaultFilters.license) {
+    params.srLizenz = filters.license
+  }
   if (filters.atRiskOnly) params.atRiskOnly = true
 
   if (userLocation.value) {
@@ -1698,6 +1724,9 @@ async function loadLiveGames() {
     liveAvailableFilters.value = payload.availableFilters || {}
     if (filters.atRiskOnly && liveAvailableFilters.value.atRiskCount === 0) {
       filters.atRiskOnly = false
+    }
+    if (filters.license === 'LSE' && Number(liveAvailableFilters.value.lseCount) === 0) {
+      filters.license = defaultFilters.license
     }
     liveApiStatus.value = 'success'
     previewMode.value = 'success'
@@ -1887,12 +1916,17 @@ function clearVenueFilter() {
 
 function isQuickFilterActive(filterId) {
   if (filterId === 'atRisk') return filters.atRiskOnly
+  if (filterId === 'lse') return isLseFilterActive.value
   if (filterId === 'nearby') return filters.nearbyOnly
   if (filterId === 'weekend') return filters.date === 'Dieses Wochenende'
   return false
 }
 
 function toggleQuickFilter(filterId) {
+  if (filterId === 'lse') {
+    filters.license = isLseFilterActive.value ? defaultFilters.license : 'LSE'
+    return
+  }
   if (filterId === 'atRisk') {
     if (hasAtRiskGames.value || filters.atRiskOnly) filters.atRiskOnly = !filters.atRiskOnly
     return
@@ -2635,6 +2669,23 @@ onUnmounted(() => {
   color: var(--mvp-danger);
   border-color: var(--mvp-danger-border);
   background: var(--mvp-danger-soft);
+}
+
+.quick-filter--license {
+  color: var(--mvp-blue);
+  border-color: rgba(63, 127, 255, 0.35);
+}
+
+.quick-filter--license:hover,
+.quick-filter--license.is-active {
+  color: var(--mvp-blue);
+  border-color: rgba(63, 127, 255, 0.5);
+  background: var(--mvp-blue-soft);
+}
+
+.quick-filter-total--license {
+  background: var(--mvp-blue-soft);
+  color: var(--mvp-blue);
 }
 
 .risk-filter-toggle .toggle-track.is-active { background: var(--mvp-danger); }

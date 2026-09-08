@@ -135,7 +135,7 @@ Das Projekt verwendet Umgebungsvariablen für die Konfiguration.
 
 ```bash
 # .env Datei erstellen
-cp env.example .env
+cp .env.sample .env
 
 # Werte anpassen
 # Development
@@ -184,7 +184,7 @@ npm install
 
 ```bash
 # .env Datei erstellen
-cp env.example .env
+cp .env.sample .env
 
 # Werte anpassen
 ```
@@ -214,6 +214,33 @@ npm run preview
 ```bash
 npm run lint
 ```
+
+## 🚢 Releases und Deployment
+
+Pushes auf `main` führen Linting und einen Produktions-Build aus. Ein Release wird
+über einen SemVer-Tag ausgelöst, der exakt zur `version` in `package.json` passen
+muss:
+
+```bash
+npm version patch --no-git-tag-version
+git add package.json package-lock.json
+git commit -m "Release frontend v2.0.1"
+git push origin main
+git tag v2.0.1
+git push origin v2.0.1
+```
+
+Der Workflow baut das Frontend auf dem ISPConfig-Server mit der Datei
+`/var/www/clients/client2/web3/web/.srbasar/frontend/shared/.env`. Der fertige Build
+landet in einem versionierten Release-Verzeichnis. Danach wird der ISPConfig-
+Webpfad `/var/www/clients/client2/web3/web` bleibt ISPConfig-kompatibel bestehen;
+Assets werden vor dem atomaren Wechsel der `index.html` bereitgestellt. Die
+Release-Auswahl wird zusätzlich über `current` dokumentiert. Vorherige Releases
+bleiben für einen Rollback erhalten.
+
+Für das Repository werden die Actions-Secrets `DEPLOY_SSH_KEY` und
+`DEPLOY_KNOWN_HOSTS` benötigt. Der private Schlüssel wird nicht im Repository
+gespeichert.
 
 ## 🔧 Konfiguration
 

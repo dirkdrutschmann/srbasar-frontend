@@ -12,8 +12,8 @@
             <font-awesome-icon icon="fa-solid fa-info-circle" class="me-2 mt-1" />
             <div>
               <strong>Wichtiger Hinweis:</strong><br>
-              Mit der Änderungen im DBB, verwalten Vereinschiedsrichterwarte ihre Spiele und deren Basar-Status ausschließlich über 
-              <a href="https://basketball-bund.net" target="_blank" class="alert-link">TeamSL</a>.<br><br></br>
+              Mit den Änderungen im DBB verwalten Vereinschiedsrichterwarte ihre Spiele und deren Basar-Status ausschließlich über
+              <a href="https://basketball-bund.net" target="_blank" class="alert-link">TeamSL</a>.<br><br>
               <small>Dieser Login ist ausschließlich für Verantwortliche des Verbandes und bietet zudem keinerlei Möglichkeiten Spiele in den Basar zu verwalten.</small>
             </div>
           </div>
@@ -142,7 +142,7 @@ const handleLogin = async () => {
     } else {
       message.value = result.error || 'Login fehlgeschlagen'
     }
-  } catch (error) {
+  } catch {
     message.value = 'Ein Fehler ist aufgetreten'
   } finally {
     loading.value = false

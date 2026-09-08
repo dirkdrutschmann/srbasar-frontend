@@ -119,7 +119,8 @@ onMounted(async () => {
       email: profile.email || '',
       username: profile.username || ''
     }
-  } catch (error) {
+  } catch {
+    // Das Profilformular bleibt mit den Standardwerten geöffnet.
   }
 })
 
@@ -130,7 +131,7 @@ const updateProfile = async () => {
     // Aktualisiere den Store
     await authStore.setUser(profileForm.value)
     alert('Profil erfolgreich aktualisiert!')
-  } catch (error) {
+  } catch {
     alert('Fehler beim Aktualisieren des Profils')
   } finally {
     loading.value = false
@@ -158,7 +159,7 @@ const changePassword = async () => {
     }
     
     alert('Passwort erfolgreich geändert!')
-  } catch (error) {
+  } catch {
     alert('Fehler beim Ändern des Passworts')
   } finally {
     passwordLoading.value = false
@@ -175,4 +176,3 @@ const changePassword = async () => {
   min-width: 120px;
 }
 </style>
-

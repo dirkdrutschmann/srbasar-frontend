@@ -79,7 +79,5 @@ temp/
 
 # Vite
 .vite/ 
-package-lock.json
-yarn.lock
 # Sentry Config File
 .env.sentry-build-plugin

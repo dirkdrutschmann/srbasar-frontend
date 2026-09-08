@@ -107,7 +107,7 @@ onMounted(async () => {
   try {
     const response = await VereinService.getVereine()
     vereine.value = response || []
-  } catch (error) {
+  } catch {
     vereine.value = []
   }
 })
@@ -129,7 +129,7 @@ const updateHideLink = async (verein) => {
       updateStatus.value[verein.vereinId] = false
     }, 2000)
     
-  } catch (error) {
+  } catch {
     alert('Fehler beim Speichern der Änderung')
   } finally {
     updating.value = null

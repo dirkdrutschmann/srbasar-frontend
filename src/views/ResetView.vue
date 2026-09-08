@@ -87,7 +87,7 @@ const handleReset = async () => {
   try {
     await AuthService.reset(email.value)
     message.value = "Sollte es einen Benutzer mit dieser E-Mail-Adresse geben, wurde dir gerade ein Reset-Link zugesendet. Bitte überprüfe auch deinen Spam-Ordner. Der Link ist 24 Stunden gültig."
-  } catch (err) {
+  } catch {
     error.value = "Fehler beim Senden des Reset-Links"
   } finally {
     loading.value = false

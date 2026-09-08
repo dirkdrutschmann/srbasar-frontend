@@ -145,7 +145,7 @@ const loadGames = async () => {
       pagination.value = res.data.pagination || {}
       availableFilters.value = res.data.availableFilters || {}
     }
-  } catch (error) {
+  } catch {
     games.value = []
   } finally {
     loading.value = false

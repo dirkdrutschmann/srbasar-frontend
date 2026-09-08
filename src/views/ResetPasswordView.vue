@@ -121,7 +121,7 @@ const validateToken = async (token) => {
       tokenValid.value = false
       tokenError.value = response.message
     }
-  } catch (err) {
+  } catch {
     tokenValid.value = false
     tokenError.value = "Fehler bei der Token-Überprüfung"
   } finally {
@@ -300,4 +300,4 @@ const handleResetPassword = async () => {
   width: 3rem;
   height: 3rem;
 }
-</style> 
+</style>

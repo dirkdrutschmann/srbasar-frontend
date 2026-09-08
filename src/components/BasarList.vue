@@ -151,7 +151,7 @@
       :rows="games"
       :totalRows="pagination.totalItems"
       :rowStyleClass="getRowClass"
-      :isLoading.sync="loading"
+      :isLoading="loading"
       :pagination-options="{
         enabled: true,
         perPage: pagination.pageSize || 10,
@@ -458,7 +458,7 @@ const formatDateForDisplay = (timestamp) => {
       month: "2-digit",
       day: "2-digit",
     });
-  } catch (error) {
+  } catch {
     return "N/A";
   }
 };

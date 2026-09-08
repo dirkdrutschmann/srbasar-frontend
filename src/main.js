@@ -36,7 +36,7 @@ if (import.meta.env.VITE_API_BASE_URL) {
   try {
     const apiOrigin = new URL(import.meta.env.VITE_API_BASE_URL).origin;
     tracePropagationTargets.push(apiOrigin);
-  } catch (_) {
+  } catch {
     // Ignore malformed API URLs and fall back to defaults
   }
 }

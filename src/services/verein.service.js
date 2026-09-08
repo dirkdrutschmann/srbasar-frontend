@@ -5,20 +5,16 @@ class VereinService {
     try {
       const response = await apiClient.get('/vereine', { params })
       return response.data?.data?.vereine || []
-    } catch (error) {
+    } catch {
       return []
     }
   }
 
   async updateHideLink(vereinId, hideLink) {
-    try {
-      const response = await apiClient.patch(`/vereine/${vereinId}/hideLink`, {
-        hideLink: hideLink
-      })
-      return response.data
-    } catch (error) {
-      throw error
-    }
+    const response = await apiClient.patch(`/vereine/${vereinId}/hideLink`, {
+      hideLink: hideLink
+    })
+    return response.data
   }
 }
 

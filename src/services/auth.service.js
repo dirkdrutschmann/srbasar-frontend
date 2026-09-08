@@ -2,15 +2,11 @@ import { apiClient } from './api-client';
 
 class AuthService {
   async login(user) {
-    try {
-      const response = await apiClient.post('/users/login', {
-        username: user.username || user.email, // Unterstützt sowohl username als auch email
-        password: user.password
-      })
-      return response.data
-    } catch (error) {
-      throw error
-    }
+    const response = await apiClient.post('/users/login', {
+      username: user.username || user.email, // Unterstützt sowohl username als auch email
+      password: user.password
+    })
+    return response.data
   }
 
   logout() {
@@ -23,32 +19,24 @@ class AuthService {
         email: email
       })
       return response.data
-    } catch (error) {
+    } catch {
       return false
     }
   }
 
   async validateResetToken(token) {
-    try {
-      const response = await apiClient.post('/users/validate-reset-token', {
-        token: token
-      })
-      return response.data
-    } catch (error) {
-      throw error
-    }
+    const response = await apiClient.post('/users/validate-reset-token', {
+      token: token
+    })
+    return response.data
   }
 
   async resetPassword(token, password) {
-    try {
-      const response = await apiClient.post('/users/reset-password', {
-        resetToken: token,
-        newPassword: password
-      })
-      return response.data
-    } catch (error) {
-      throw error
-    }
+    const response = await apiClient.post('/users/reset-password', {
+      resetToken: token,
+      newPassword: password
+    })
+    return response.data
   }
 }
 

@@ -1,4 +1,3 @@
-import {format} from "date-fns";
 import { fieldFn } from '@/utils/fieldUtils'
 
 // Vue Good Table Next globale Konfiguration
@@ -84,4 +83,3 @@ export const sort = {
 }
 
 export { fieldFn }
-

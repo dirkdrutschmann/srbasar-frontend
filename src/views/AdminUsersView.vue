@@ -345,7 +345,7 @@
     try {
       const response = await AdminService.getAllUsers()
       users.value = response.data || []
-    } catch (error) {
+    } catch {
       showToast('Fehler beim Laden der Benutzer', 'error')
     } finally {
       loading.value = false

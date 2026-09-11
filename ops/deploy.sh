@@ -14,6 +14,10 @@ if [[ ! -d "$SOURCE_DIR" ]]; then
   exit 66
 fi
 
+pushd "$SOURCE_DIR" >/dev/null
+npm run audit:production
+popd >/dev/null
+
 APP_ROOT="${SRBASAR_FRONTEND_ROOT:-/var/www/clients/client2/web3/private/frontend}"
 WEB_ROOT="${SRBASAR_FRONTEND_WEB_ROOT:-/var/www/clients/client2/web3/web}"
 CURRENT_LINK="$APP_ROOT/current"

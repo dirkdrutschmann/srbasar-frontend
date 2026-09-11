@@ -101,6 +101,17 @@
                   {{ quickFilter.id === 'atRisk' ? atRiskCount : lseCount }}
                 </span>
               </button>
+              <button
+                v-if="showBallersClubFilter"
+                class="quick-filter quick-filter--ballers"
+                :class="{ 'is-active': isBallersClubFilterActive }"
+                :aria-pressed="isBallersClubFilterActive"
+                type="button"
+                @click="toggleBallersClubFilter"
+              >
+                <font-awesome-icon :icon="['fas', 'basketball']" aria-hidden="true" />
+                Ballers Club
+              </button>
             </div>
 
             <div v-if="activeFilterLabels.length" class="active-filters" aria-label="Aktive Filter">
@@ -176,6 +187,9 @@
               </div>
             </div>
           </div>
+
+          <p v-if="ballersState.enabled && !ballersState.available && filters.source !== 'TeamSL'" class="results-meta" role="status">Ballers Club ist vorübergehend nicht verfügbar. Veraltete Turniere werden ausgeblendet.</p>
+          <p v-else-if="ballersState.status === 'stale' && filters.source !== 'TeamSL'" class="results-meta" role="status">Ballers Club: Der letzte bestätigte Stand wird angezeigt. Die Aktualisierung wird erneut versucht.</p>
 
           <div v-if="previewMode === 'loading'" class="skeleton-list" aria-live="polite" aria-label="Spiele werden geladen">
             <article v-for="skeleton in 3" :key="skeleton" class="game-card skeleton-card">
@@ -255,9 +269,9 @@
               </div>
               <span role="columnheader"><span class="sr-only">Details</span></span>
             </div>
-            <article
-              v-for="game in visibleGames"
-              :key="game.id"
+            <template v-for="game in visibleGames" :key="game.id">
+            <BallersClubRow v-if="game.source === 'ballers-club'" :game="game" :column-count="visibleTableColumns.length + 1" :show-distance="Boolean(userLocation)" @open="openBallersGame" />
+            <article v-else
               class="game-table-row"
               :class="{ 'game-table-row--at-risk': game.isAtRisk }"
               role="rowgroup"
@@ -315,12 +329,13 @@
                 </div>
               </div>
             </article>
+            </template>
           </div>
 
           <div v-else class="game-list" aria-live="polite">
-            <article
-              v-for="game in visibleGames"
-              :key="game.id"
+            <template v-for="game in visibleGames" :key="game.id">
+            <BallersClubCard v-if="game.source === 'ballers-club'" :game="game" :show-distance="Boolean(userLocation)" @open="openBallersGame" />
+            <article v-else
               class="game-card"
               :class="{ 'game-card--at-risk': game.isAtRisk }"
               role="button"
@@ -373,6 +388,7 @@
                 </span>
               </div>
             </article>
+            </template>
           </div>
 
           <nav
@@ -488,7 +504,7 @@
     </div>
 
     <button
-      v-if="!isFilterSheetOpen && !isRadiusPickerOpen && !selectedGame && !isImprintOpen && !isSupportOpen"
+      v-if="!isFilterSheetOpen && !isRadiusPickerOpen && !selectedGame && !selectedBallersGame && !selectedBallersApplicationGame && !isImprintOpen && !isSupportOpen"
       class="mobile-filter-fab"
       type="button"
       @click="isFilterSheetOpen = true"
@@ -878,6 +894,8 @@
       </section>
         </div>
       </div>
+      <BallersClubDetailModal v-if="selectedBallersGame" :game="selectedBallersGame" :available="Boolean(ballersState.available && selectedBallersGame.freeSpots > 0)" @close="selectedBallersGame = null" @request="openBallersApplication" />
+      <BallersClubModal v-if="selectedBallersApplicationGame" :game="selectedBallersApplicationGame" :contact="ballersState.contact" :available="Boolean(ballersState.available && selectedBallersApplicationGame.freeSpots > 0)" :valid-until="new Date(ballersState.updatedAt).getTime() + 15 * 60 * 1000" @close="selectedBallersApplicationGame = null" />
     </Teleport>
   </section>
 </template>
@@ -888,6 +906,11 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import GamesService from '@/services/games.service.js'
 import RefereeAssignments from '@/components/games/RefereeAssignments.vue'
 import GameRiskBadge from '@/components/games/GameRiskBadge.vue'
+import BallersClubCard from '@/modules/ballersclub/BallersClubCard.vue'
+import BallersClubRow from '@/modules/ballersclub/BallersClubRow.vue'
+import BallersClubModal from '@/modules/ballersclub/BallersClubModal.vue'
+import BallersClubDetailModal from '@/modules/ballersclub/BallersClubDetailModal.vue'
+import { normalizeBallersGame } from '@/modules/ballersclub/contact.js'
 import { getRefereeAssignments, isGameAtRisk } from '@/utils/refereeAssignments.js'
 import {
   formatDistanceKm,
@@ -911,6 +934,7 @@ const quickFilters = [
 ]
 
 const filterDefinitions = [
+  { id: 'source', label: 'Quelle', searchLabel: 'Quellen suchen', searchPlaceholder: 'Quelle suchen …' },
   { id: 'date', label: 'Termin', searchLabel: 'Termine suchen', searchPlaceholder: 'Termin suchen …' },
   { id: 'league', label: 'Liga', searchLabel: 'Ligen suchen', searchPlaceholder: 'Liga suchen …' },
   { id: 'venue', label: 'Hallen', multiple: true, searchLabel: 'Hallen suchen', searchPlaceholder: 'Halle suchen …' },
@@ -1030,6 +1054,7 @@ const mockGames = [
 })
 
 const defaultFilters = {
+  source: 'Alle Quellen',
   date: 'Alle Termine',
   dateValue: '',
   league: 'Alle Ligen',
@@ -1068,6 +1093,9 @@ const isImprintOpen = ref(false)
 const isSupportOpen = ref(false)
 const isGithubTooltipOpen = ref(false)
 const selectedGame = ref(null)
+const selectedBallersGame = ref(null)
+const selectedBallersApplicationGame = ref(null)
+const ballersState = ref({ available: false, contact: null })
 const isRefreshing = ref(false)
 const lastUpdated = ref('wird geladen')
 const AUTO_UPDATE_SECONDS = 30
@@ -1110,6 +1138,8 @@ const hasLseGames = computed(() => (
   lseCount.value > 0
   && (filters.license === defaultFilters.license || isLseFilterActive.value)
 ))
+const showBallersClubFilter = computed(() => Boolean(ballersState.value.available) || filters.source === 'Ballers Club')
+const isBallersClubFilterActive = computed(() => filters.source === 'Ballers Club')
 const visibleQuickFilters = computed(() => quickFilters.filter((filter) => (
   filter.id !== 'atRisk' && filter.id !== 'lse'
     || (filter.id === 'atRisk' && (hasAtRiskGames.value || filters.atRiskOnly))
@@ -1126,6 +1156,7 @@ const filterOptions = computed(() => {
 
   return {
     date: ['Alle Termine', 'Diese Woche', 'Dieses Wochenende', 'Nächste Woche', 'Bestimmtes Datum'],
+    source: ['Alle Quellen', 'TeamSL', ...(showBallersClubFilter.value ? ['Ballers Club'] : [])],
     league: ['Alle Ligen', ...uniqueValues(liveOptions('ligaName', games.map((game) => game.league)))],
     venue: uniqueValues(liveOptions('spielfeldName', games.map((game) => game.venue))),
     license: ['Alle Lizenzstufen', ...uniqueValues(liveOptions('srLizenz', games.map((game) => game.license)))]
@@ -1307,6 +1338,7 @@ const paginationItems = computed(() => {
 })
 
 const liveQueryState = computed(() => ({
+  source: filters.source,
   search: search.value.trim(),
   date: filters.date,
   dateValue: filters.dateValue,
@@ -1364,6 +1396,7 @@ const activeFilterLabels = computed(() => {
   if (filters.license !== defaultFilters.license) labels.push({ key: 'license', label: filters.license })
   if (filters.nearbyOnly) labels.push({ key: 'nearbyOnly', label: 'In deiner Nähe · ' + selectedRadiusKm.value + ' km' })
   if (filters.atRiskOnly) labels.push({ key: 'atRiskOnly', label: 'Ausfall bedroht' })
+  if (filters.source !== defaultFilters.source) labels.push({ key: 'source', label: filters.source })
   return labels
 })
 
@@ -1553,6 +1586,7 @@ function getLiveSortField() {
 
 function getLiveQueryParams() {
   const params = {
+    source: { TeamSL: 'team-sl', 'Ballers Club': 'ballers-club' }[filters.source] || 'all',
     ...getDateRangeForServer(),
     sortBy: userLocation.value || sortBy.value !== 'distance' ? getLiveSortField() : 'spieldatum',
     sortOrder: sortDirection.value
@@ -1669,8 +1703,9 @@ function normalizeLiveGame(game, index) {
   const city = game.spielOrt || 'Ort nicht angegeben'
   const distanceKm = parseDistanceKm(game.distanceKm)
 
-  return {
-    id: game.spielplanId || 'live-' + index,
+  const normalized = {
+    id: game.id || game.spielplanId || 'live-' + index,
+    source: game.source || 'team-sl',
     sourceId: game.spielplanId || null,
     date: date.toISOString(),
     dateGroup: getDateGroup(date),
@@ -1695,6 +1730,7 @@ function normalizeLiveGame(game, index) {
     nearby: Number.isFinite(distanceKm) && distanceKm <= selectedRadiusKm.value,
     accent: getDateAccent(date)
   }
+  return game.source === 'ballers-club' ? normalizeBallersGame(game, normalized) : normalized
 }
 
 async function loadLiveGames() {
@@ -1722,6 +1758,12 @@ async function loadLiveGames() {
     liveGames.value = sourceGames.map(normalizeLiveGame).filter(Boolean)
     livePagination.value = payload.pagination || { totalItems: sourceGames.length }
     liveAvailableFilters.value = payload.availableFilters || {}
+    ballersState.value = payload.sources?.ballersClub || { available: false, contact: null }
+    for (const selected of [selectedBallersGame, selectedBallersApplicationGame]) {
+      if (!selected.value) continue
+      const updated = liveGames.value.find(game => game.id === selected.value.id)
+      selected.value = updated || { ...selected.value, freeSpots: 0 }
+    }
     if (filters.atRiskOnly && liveAvailableFilters.value.atRiskCount === 0) {
       filters.atRiskOnly = false
     }
@@ -1734,6 +1776,7 @@ async function loadLiveGames() {
   } catch (error) {
     if (requestSequence !== liveRequestSequence) return
     liveApiStatus.value = 'error'
+    ballersState.value = { ...ballersState.value, available: false }
     liveApiError.value = error?.message || 'Die Live-API ist momentan nicht erreichbar.'
     previewMode.value = 'error'
   }
@@ -1940,6 +1983,10 @@ function toggleQuickFilter(filterId) {
   }
 }
 
+function toggleBallersClubFilter() {
+  filters.source = isBallersClubFilterActive.value ? defaultFilters.source : 'Ballers Club'
+}
+
 function removeFilter(filterKey) {
   if (filterKey === 'nearbyOnly') {
     filters.nearbyOnly = false
@@ -2067,7 +2114,18 @@ async function retryPreview() {
 }
 
 function openGame(game) {
+  if (game.source === 'ballers-club') return openBallersGame(game)
   selectedGame.value = game
+}
+
+function openBallersGame(game) {
+  selectedBallersGame.value = game
+}
+
+function openBallersApplication(game) {
+  if (!ballersState.value.available || Number(game?.freeSpots) <= 0) return
+  selectedBallersGame.value = null
+  selectedBallersApplicationGame.value = game
 }
 
 function closeGame() {
@@ -2080,6 +2138,8 @@ function closeOverlays() {
   isImprintOpen.value = false
   isSupportOpen.value = false
   isGithubTooltipOpen.value = false
+  selectedBallersGame.value = null
+  selectedBallersApplicationGame.value = null
   selectedGame.value = null
 }
 
@@ -2676,6 +2736,23 @@ onUnmounted(() => {
   border-color: rgba(63, 127, 255, 0.35);
 }
 
+.quick-filter--ballers {
+  border-color: rgba(255, 209, 0, 0.42);
+  background: color-mix(in srgb, var(--mvp-yellow, #ffd100) 8%, transparent);
+  color: #9a7600;
+}
+
+.quick-filter--ballers:hover,
+.quick-filter--ballers.is-active {
+  border-color: rgba(255, 209, 0, 0.72);
+  background: color-mix(in srgb, var(--mvp-yellow, #ffd100) 18%, transparent);
+  color: #7a5d00;
+}
+
+.quick-filter--ballers svg {
+  color: #d09f00;
+}
+
 .quick-filter--license:hover,
 .quick-filter--license.is-active {
   color: var(--mvp-blue);
@@ -2852,6 +2929,10 @@ onUnmounted(() => {
 .skeleton-list {
   display: grid;
   gap: 0.75rem;
+}
+
+.game-list {
+  align-items: stretch;
 }
 
 .game-table {

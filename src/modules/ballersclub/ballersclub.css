@@ -1,0 +1,16 @@
+@font-face{font-family:Ballers Ginto;src:url('../../assets/ballersclub/fonts/ginto-black-italic.woff2') format('woff2');font-style:italic;font-weight:900;font-display:swap}
+@font-face{font-family:Ballers Sans;src:url('../../assets/ballersclub/fonts/dm-sans-regular.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:Ballers Sans;src:url('../../assets/ballersclub/fonts/dm-sans-medium.woff2') format('woff2');font-style:normal;font-weight:500;font-display:swap}
+@font-face{font-family:Ballers Mono;src:url('../../assets/ballersclub/fonts/dm-mono-medium.woff2') format('woff2');font-style:normal;font-weight:500;font-display:swap}
+.ballers-club{--bc-navy:#002652;--bc-yellow:#ffd100;--bc-muted:#afc2d8;--bc-green:#41ff7d;font-family:Ballers Sans,Arial,sans-serif;color:#fff;background:var(--bc-navy);box-sizing:border-box}
+.ballers-club *{box-sizing:border-box}
+.bc-display{font-family:Ballers Ginto,Arial,sans-serif;font-style:italic;font-weight:900;line-height:1.04;letter-spacing:0;text-transform:uppercase}
+.bc-mono{font-family:Ballers Mono,monospace;font-weight:500}
+.bc-button{display:inline-flex;align-items:center;justify-content:center;gap:1rem;min-height:2.75rem;padding:.7rem 1.2rem;border:0;border-radius:.6rem;background:var(--bc-yellow);color:var(--bc-navy);font:500 1rem Ballers Sans,Arial,sans-serif;cursor:pointer;text-decoration:none;line-height:1.2}
+.bc-button:hover{background:#ffe05c;color:var(--bc-navy)}
+.bc-button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.bc-button:disabled{opacity:.6;cursor:not-allowed}
+.bc-muted{color:var(--bc-muted)}
+.bc-contact-hint{font-size:.8125rem;line-height:1.4;color:var(--bc-muted);margin:0}
+.bc-status{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:2rem;padding:.35rem 1rem;border-radius:99px;background:#083f54;color:var(--bc-green);font:500 .875rem Ballers Sans,Arial,sans-serif;line-height:1.2;white-space:nowrap}
+.bc-status-dot{width:.45rem;height:.45rem;flex:none;border-radius:50%;background:currentColor}

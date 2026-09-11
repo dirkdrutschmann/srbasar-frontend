@@ -31,8 +31,8 @@
         </div>
         <div class="bc-detail-item bc-detail-item--pay">
           <span class="bc-detail-label">Vergütung</span>
-          <strong>40–50 €</strong>
-          <span>je nach Länge des Turniers</span>
+          <strong>{{ paymentLabel }}</strong>
+          <span>{{ paymentFormulaLabel }}</span>
         </div>
         <div v-if="meetingTimeLabel" class="bc-detail-item bc-detail-item--meeting">
           <span class="bc-detail-label">Treffpunkt</span>
@@ -40,7 +40,7 @@
         </div>
       </div>
 
-      <p class="bc-detail-note">Die genaue Vergütung und weitere organisatorische Details bitte erfragen. Über die gelbe Anfrage öffnest du anschließend deine Bewerbung per WhatsApp oder E-Mail.</p>
+      <p class="bc-detail-note">Die Vergütung berechnet sich aus 10 € Grundbetrag plus 10 € je Turnierstunde. Weitere organisatorische Details bitte erfragen. Über die gelbe Anfrage öffnest du anschließend deine Bewerbung per WhatsApp oder E-Mail.</p>
       <p v-if="!available" class="bc-detail-unavailable" role="status">Für dieses Turnier ist momentan kein aktueller freier Platz verfügbar.</p>
 
       <footer class="bc-detail-actions">
@@ -55,6 +55,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import logo from '@/assets/ballersclub/logo.svg'
 import BallersStatusPill from './BallersStatusPill.vue'
+import { calculateBallersPayment, formatBallersDuration, formatBallersPayment, getBallersDurationHours } from './contact.js'
 import './ballersclub.css'
 
 const props = defineProps({
@@ -67,6 +68,13 @@ const dateLabel = computed(() => new Intl.DateTimeFormat('de-DE', {
   day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Berlin'
 }).format(new Date(props.game.date)))
 const meetingTimeLabel = computed(() => String(props.game.meetingTime || '').replace(/^Treffpunkt\s*:\s*/i, '').trim())
+const durationHours = computed(() => getBallersDurationHours(props.game))
+const paymentLabel = computed(() => formatBallersPayment(calculateBallersPayment(props.game)))
+const paymentFormulaLabel = computed(() => {
+  if (!Number.isFinite(durationHours.value)) return '10 € Grundbetrag + 10 € je Stunde'
+  const unit = durationHours.value === 1 ? 'Stunde' : 'Stunden'
+  return `${formatBallersDuration(durationHours.value)} ${unit} × 10 € + 10 €`
+})
 let previousFocus
 
 onMounted(() => {

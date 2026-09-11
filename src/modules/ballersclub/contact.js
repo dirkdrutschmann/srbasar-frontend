@@ -6,6 +6,43 @@ export function validateApplication({ name, age, license }) {
   return errors
 }
 
+function toTimestamp(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  const timestamp = Date.parse(String(value || ''))
+  return Number.isFinite(timestamp) ? timestamp : NaN
+}
+
+function durationFromTimeLabel(timeLabel) {
+  const match = String(timeLabel || '').match(/(\d{1,2})[:.](\d{2})\s*[–-]\s*(\d{1,2})[:.](\d{2})/)
+  if (!match) return null
+  const startMinutes = Number(match[1]) * 60 + Number(match[2])
+  const endMinutes = Number(match[3]) * 60 + Number(match[4])
+  if (!Number.isFinite(startMinutes) || !Number.isFinite(endMinutes) || endMinutes <= startMinutes) return null
+  return (endMinutes - startMinutes) / 60
+}
+
+export function getBallersDurationHours(game) {
+  const start = toTimestamp(game?.date ?? game?.startsAt ?? game?.spieldatum)
+  const end = toTimestamp(game?.endTimestamp ?? game?.endsAt)
+  if (Number.isFinite(start) && Number.isFinite(end) && end > start) return Number(((end - start) / 3600000).toFixed(2))
+  return durationFromTimeLabel(game?.timeLabel)
+}
+
+export function calculateBallersPayment(game) {
+  const hours = getBallersDurationHours(game)
+  return Number.isFinite(hours) ? Number((hours * 10 + 10).toFixed(2)) : null
+}
+
+export function formatBallersPayment(amount) {
+  if (!Number.isFinite(amount)) return 'Auf Anfrage'
+  return `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(amount)} €`
+}
+
+export function formatBallersDuration(hours) {
+  if (!Number.isFinite(hours)) return null
+  return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(hours)
+}
+
 export function buildContactLinks(game, contact, application) {
   if (Object.keys(validateApplication(application)).length) throw new Error('Bitte vervollständige deine Angaben.')
   if (!/^[1-9]\d{6,14}$/.test(contact?.phone || '') || !/^[^\s@?&#\r\n]+@[^\s@?&#\r\n]+\.[^\s@?&#\r\n]+$/.test(contact?.email || '') || !contact?.name || /[\r\n]/.test(contact.name)) throw new Error('Die Kontaktdaten sind derzeit nicht verfügbar.')

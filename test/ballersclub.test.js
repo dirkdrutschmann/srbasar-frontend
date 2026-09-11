@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { buildContactLinks, normalizeBallersGame, validateApplication } from '../src/modules/ballersclub/contact.js'
+import { buildContactLinks, calculateBallersPayment, getBallersDurationHours, normalizeBallersGame, validateApplication } from '../src/modules/ballersclub/contact.js'
 
 const game = { date: '2026-09-12T08:00:00Z', tournamentType: 'U12 Tour', timeLabel: '10:00–13:30', venue: 'Adalbertstraße', address: 'Straße 53, Berlin' }
 const contact = { name: 'Julian Pokorny', phone: '4917622957481', email: 'schiedsrichter@albaberlin.de' }
@@ -21,6 +21,12 @@ test('requires name, age and licence and rejects header injection in contact dat
   assert.equal(Object.keys(validateApplication({})).length, 3)
   assert.ok(validateApplication({ name: 'Name', age: '-1', license: 'LSE' }).age)
   assert.throws(() => buildContactLinks(game, { ...contact, email: 'x@y.de?bcc=other@example.org' }, { name: 'Name', age: 20, license: 'LSE' }))
+})
+test('calculates Ballers Club payment from tournament duration', () => {
+  const tournament = { ...game, endTimestamp: Date.parse('2026-09-12T11:30:00Z') }
+  assert.equal(getBallersDurationHours(tournament), 3.5)
+  assert.equal(calculateBallersPayment(tournament), 45)
+  assert.equal(calculateBallersPayment({ ...game, timeLabel: 'Uhrzeit folgt' }), null)
 })
 test('normalizes tournament entries without dummy teams, licences or TeamSL links', () => {
   const normalized = normalizeBallersGame({ tournamentId: 'abc', freeSpots: 1, totalSpots: 3, tournamentType: 'U12 Tour', spielfeldName: 'Halle' }, { homeTeam: 'Heimteam', license: 'LSE' })
@@ -55,9 +61,9 @@ test('uses the shared desktop card height and opens a detail modal before reques
   const detail = await readFile(new URL('../src/modules/ballersclub/BallersClubDetailModal.vue', import.meta.url), 'utf8')
   const row = await readFile(new URL('../src/modules/ballersclub/BallersClubRow.vue', import.meta.url), 'utf8')
   const view = await readFile(new URL('../src/views/DesignMvpView.vue', import.meta.url), 'utf8')
-  assert.match(detail, /40–50 €/)
-  assert.match(detail, /je nach Länge des Turniers/)
-  assert.match(detail, /weitere organisatorische Details bitte erfragen/)
+  assert.match(detail, /calculateBallersPayment/)
+  assert.match(detail, /10 € Grundbetrag plus 10 € je Turnierstunde/)
+  assert.match(detail, /weitere organisatorische Details bitte erfragen/i)
   assert.match(detail, /Anfrage per WhatsApp oder E-Mail/)
   assert.match(detail, /emit\('request', game\)/)
   assert.match(detail, /replace\(\/\^Treffpunkt/)
